@@ -1,0 +1,41 @@
+.course-container {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.course-title {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.course-section {
+  margin-bottom: 30px;
+}
+
+.sub-heading {
+  text-align: left;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+.delete-btn {
+  margin-left: 10px;
+  background: red;
+  color: white;
+  border: none;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.admin-box {
+  margin-top: 10px;
+}

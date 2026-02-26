@@ -1,0 +1,73 @@
+.container {
+  padding: 20px;
+  text-align: center;
+}
+
+.title {
+  margin-bottom: 30px;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  width: 250px;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.card.active {
+  border: 2px solid #1F4E8C;
+}
+
+.content-box {
+  margin-top: 30px;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.content-box ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.admin-box {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-box input {
+  flex: 1;
+  padding: 5px;
+}
+
+.delete-btn {
+  margin-left: 10px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 3px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #ff7875;
+}

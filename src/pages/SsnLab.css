@@ -1,0 +1,104 @@
+/* FULL PAGE */
+.ssnlab-page {
+  position: relative;
+  height: 100vh;       /* FULL SCREEN */
+  overflow: hidden;    /* prevent scrolling split */
+}
+
+/* VIDEO BACKGROUND */
+.video-container {
+  position: absolute;  /* 🔥 change from fixed */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.bg-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* DARK OVERLAY */
+.video-container::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* CONTENT CENTERED */
+.ssnlab-content {
+  position: absolute;   /* 🔥 IMPORTANT */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* center vertically */
+  align-items: center;      /* center horizontally */
+}
+
+/* MAIN CONTAINER */
+.ssnlab-outer-container {
+  text-align: center;
+}
+
+/* TITLE */
+.ssnlab-title {
+  font-size: 36px;
+  color: #00d4ff;
+  margin-bottom: 40px;
+  font-weight: bold;
+}
+
+/* CARD GRID */
+.ssnlab-inner-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+}
+
+/* GLASS CARDS */
+.ssnlab-card {
+  width: 260px;
+  padding: 25px;
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  color: #fff;
+
+  transition: 0.4s ease;
+  cursor: pointer;
+}
+
+.ssnlab-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.6);
+}
+
+/* TEXT */
+.ssnlab-card h3 {
+  color: #00d4ff;
+  margin-bottom: 10px;
+}
+
+.ssnlab-card p {
+  color: #cfd8dc;
+}
+
+/* LINK RESET */
+.ssnlab-link {
+  text-decoration: none;
+}

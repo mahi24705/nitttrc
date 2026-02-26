@@ -1,0 +1,58 @@
+.gallery-container {
+  padding: 30px;
+  text-align: center;
+}
+
+.gallery-title {
+  margin-bottom: 20px;
+}
+
+/* 🔥 Grid Layout */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 👈 3 per row */
+  gap: 20px;
+}
+
+/* 🔥 Image Card */
+.gallery-card {
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;  /* 👈 empty space background */
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.gallery-card img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;   /* 👈 keeps full image */
+  border-radius: 8px;
+}
+
+/* 🔴 Delete Button */
+.gallery-card button {
+  margin-top: 8px;
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+/* ➕ Admin box */
+.admin-box {
+  margin-top: 20px;
+}
+
+.admin-box input {
+  padding: 8px;
+  width: 250px;
+}
+
+.admin-box button {
+  padding: 8px 12px;
+  margin-left: 10px;
+}

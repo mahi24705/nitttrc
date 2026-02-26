@@ -1,0 +1,204 @@
+/* ===== GENERAL BODY ===== */
+
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* ===== COMMON CONTAINER ===== */
+
+.container,
+.outer-container {
+  padding: 40px;
+  text-align: center;
+}
+
+/* ===== TITLE ===== */
+
+.title {
+  font-size: 32px;
+  color: #00B4D8;
+  text-shadow: 0 0 12px rgba(0, 180, 216, 0.8);
+  margin-bottom: 30px;
+}
+
+/* ===== CARD GRID ===== */
+
+.inner-container,
+.main-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+
+/* ===== GLASS CARD STYLE ===== */
+
+.card,
+.main-card {
+  width: 280px;
+  padding: 25px;
+
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+
+  text-align: center;
+  cursor: pointer;
+
+  transition: 0.3s ease;
+}
+
+/* ===== CARD TEXT ===== */
+
+.card h3,
+.main-card h3 {
+  color: #00B4D8;
+  margin-bottom: 10px;
+}
+
+.card p,
+.main-card p {
+  color: #e0f7ff;
+}
+
+/* ===== HOVER EFFECT ===== */
+
+.card:hover,
+.main-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 10px 25px rgba(0, 180, 216, 0.5);
+}
+
+/* ===== LINK RESET ===== */
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ===== CONTENT BOX ===== */
+
+.content-box {
+  margin-top: 30px;
+  padding: 20px;
+
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+
+  border-radius: 10px;
+}
+
+/* ===== LIST (DC PAGE BULLETS) ===== */
+
+ul {
+  list-style-type: disc;
+  text-align: left;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+li {
+  margin: 10px 0;
+}
+
+/* ===== ADMIN INPUT BOX ===== */
+
+.admin-box {
+  margin-top: 20px;
+}
+
+.admin-box input {
+  padding: 8px;
+  margin-right: 10px;
+  border-radius: 5px;
+  border: none;
+}
+
+.admin-box button {
+  padding: 8px 15px;
+  background: #00B4D8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.admin-box button:hover {
+  background: #0096c7;
+}
+
+/* ===== DELETE BUTTON ===== */
+
+.delete-btn {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background: red;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* ===== HEAD PAGE TABLE ===== */
+
+.head-container {
+  padding: 50px;
+  text-align: center;
+}
+
+.head-container h2 {
+  color: #00B4D8;
+  font-size: 30px;
+  text-shadow: 0 0 10px rgba(0,180,216,0.8);
+}
+
+.achievement-table {
+  width: 95%;
+  margin: auto;
+  margin-top: 30px;
+
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.achievement-table th,
+.achievement-table td {
+  padding: 14px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.achievement-table th {
+  background: rgba(10, 46, 92, 0.9);
+  color: white;
+  font-weight: 600;
+}
+
+.achievement-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== BUTTON ===== */
+
+.view-btn {
+  padding: 8px 14px;
+  background: #00B4D8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.view-btn:hover {
+  background: #0096c7;
+  transform: scale(1.05);
+}

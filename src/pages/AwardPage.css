@@ -1,0 +1,81 @@
+/* 🌊 Background Theme (Underwater feel) */
+.award-container {
+  padding: 40px;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #001f3f, #0077b6);
+  color: white;
+}
+
+.award-title {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 30px;
+}
+
+/* ✅ FLEX LAYOUT */
+.award-flex {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ✅ COLUMN */
+.award-column {
+  width: 350px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.award-column h3 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* ✅ POINT LIST STYLE */
+.award-list {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.award-list li {
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ✅ DELETE BUTTON */
+.delete-btn {
+  background: crimson;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* ✅ INPUT AREA */
+.admin-box {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-box input {
+  flex: 1;
+  padding: 6px;
+  border-radius: 5px;
+  border: none;
+}
+
+.admin-box button {
+  padding: 6px 10px;
+  border: none;
+  background: #00b4d8;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}

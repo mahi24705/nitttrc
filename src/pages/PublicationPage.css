@@ -1,0 +1,61 @@
+.publication-container {
+  padding: 40px;
+  text-align: center;
+}
+
+.publication-title {
+  font-size: 28px;
+  margin-bottom: 30px;
+}
+
+.publication-flex {
+  display: flex;
+  flex-direction: column;  /* 👈 IMPORTANT */
+  gap: 20px;
+}
+
+.publication-column ul {
+  text-align: left;   /* align left */
+  padding-left: 20px; /* space for bullets */
+}
+
+.publication-column li {
+  margin: 10px 0;
+  line-height: 1.6;
+  list-style-type: disc; /* bullet points */
+}
+.publication-column h3 {
+  text-align: left;   /* 👈 move heading to left */
+  margin-bottom: 10px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin: 10px 0;
+}
+
+.admin-box {
+  margin-top: 15px;
+}
+
+.admin-box input {
+  padding: 6px;
+  width: 70%;
+}
+
+.admin-box button {
+  padding: 6px 10px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  margin-left: 10px;
+  color: red;
+  border: none;
+  cursor: pointer;
+}

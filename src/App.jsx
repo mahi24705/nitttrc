@@ -16,6 +16,10 @@ import NetworkIncharge from "./pages/NetworkIncharge";
 import AudioIncharge from "./pages/AudioIncharge";
 import Dc from "./pages/Dc";
 
+/* ✅ NEW IMPORTS */
+import AsCoordinator from "./pages/AsCoordinator";
+import PdpResource from "./pages/PdpResource";
+
 import "./App.css";
 
 function App() {
@@ -30,7 +34,14 @@ function App() {
         <Route path="/head" element={<Head />} />
         <Route path="/login" element={<Login />} />
 
+        {/* Course Main Page */}
         <Route path="/course" element={<CoursePage />} />
+        <Route path="/course/pdp" element={<CoursePage />} />
+
+        {/* ✅ NEW ROUTES */}
+        <Route path="/as-coordinator" element={<AsCoordinator />} />
+        <Route path="/pdp-resource" element={<PdpResource />} />
+
         <Route path="/award" element={<AwardPage />} />
         <Route path="/publication" element={<PublicationPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
@@ -38,7 +49,6 @@ function App() {
         <Route path="/network" element={<NetworkIncharge />} />
         <Route path="/audioincharge" element={<AudioIncharge />} />
         <Route path="/dc" element={<Dc />} />
-        
       </Routes>
 
       <Footer />

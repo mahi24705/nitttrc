@@ -1,121 +1,61 @@
-import { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
+import "./CoursePage.css";
 
-function CoursePage() {
-  const { user } = useContext(AuthContext);
+export default function CoursePage() {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const subHeadings = ["PDP", "PG", "ITECH", "Host Institution", "ICP"];
-
-  const initialData = () => {
-    let saved = {};
-    try {
-      saved = JSON.parse(localStorage.getItem("courseData")) || {};
-    } catch {
-      saved = {};
-    }
-
-    const initialized = {};
-    subHeadings.forEach((sub) => {
-      initialized[sub] = saved[sub] || [];
-    });
-
-    return initialized;
-  };
-
-  const [data, setData] = useState(initialData);
-  const [input, setInput] = useState({});
-
-  useEffect(() => {
-    localStorage.setItem("courseData", JSON.stringify(data));
-  }, [data]);
-
-  const handleAdd = (sub) => {
-    if (!input[sub]) return;
-
-    setData({
-      ...data,
-      [sub]: [input[sub], ...data[sub]],
-    });
-
-    setInput({ ...input, [sub]: "" });
-  };
-
-  const handleDelete = (sub, idx) => {
-    const updated = data[sub].filter((_, i) => i !== idx);
-    setData({ ...data, [sub]: updated });
-  };
+  const isPdpPage = location.pathname === "/course/pdp";
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-10">
-          Course
-        </h2>
+    <div className="nitt-wrap">
+      <div className="nitt-head">
+        <h1 className="nitt-title">{isPdpPage ? "PDP" : "Course"}</h1>
+        <p className="nitt-sub">Select a section to continue</p>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {subHeadings.map((sub) => (
-            <div
-              key={sub}
-              className="bg-white rounded-2xl shadow-md p-6 transition hover:shadow-lg"
+      {/* ✅ SAME GRID STYLE AS NITTTRC SELECTION PAGE */}
+      <div className="nitt-grid">
+        {!isPdpPage ? (
+          <>
+            <button className="nitt-card" onClick={() => navigate("/course/pdp")}>
+              <div className="nitt-card-title">PDP</div>
+              <div className="nitt-card-sub">PDP Programmes</div>
+            </button>
+
+            <button className="nitt-card" onClick={() => alert("PG page coming soon")}>
+              <div className="nitt-card-title">PG</div>
+              <div className="nitt-card-sub">Post Graduate</div>
+            </button>
+
+            <button className="nitt-card" onClick={() => alert("ITEC page coming soon")}>
+              <div className="nitt-card-title">ITEC</div>
+              <div className="nitt-card-sub">ITEC Programmes</div>
+            </button>
+
+            <button
+              className="nitt-card"
+              onClick={() => alert("Host Institution page coming soon")}
             >
-              {/* Heading */}
-              <h3 className="text-xl font-semibold text-blue-600 mb-4">
-                {sub}
-              </h3>
+              <div className="nitt-card-title">Host Institution</div>
+              <div className="nitt-card-sub">Host Institution Work</div>
+            </button>
+          </>
+        ) : (
+          <>
+            {/* ✅ PDP page should show your OLD 2 boxes style */}
+            <button className="nitt-card" onClick={() => navigate("/as-coordinator")}>
+              <div className="nitt-card-title">AS Coordinator</div>
+              <div className="nitt-card-sub">Coordinator Activities</div>
+            </button>
 
-              {/* List */}
-              <ul className="space-y-2 mb-4">
-                {data[sub].length === 0 && (
-                  <li className="text-gray-400 italic text-sm">
-                    No content yet
-                  </li>
-                )}
-
-                {data[sub].map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
-                  >
-                    <span className="text-gray-700">{item}</span>
-
-                    {user?.role === "admin" && (
-                      <button
-                        className="text-red-500 hover:text-red-700 text-sm font-medium transition"
-                        onClick={() => handleDelete(sub, idx)}
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-
-              {/* Admin Input */}
-              {user?.role === "admin" && (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder={`Add ${sub}`}
-                    value={input[sub] || ""}
-                    onChange={(e) =>
-                      setInput({ ...input, [sub]: e.target.value })
-                    }
-                    className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  />
-                  <button
-                    onClick={() => handleAdd(sub)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            <button className="nitt-card" onClick={() => navigate("/pdp-resource")}>
+              <div className="nitt-card-title">Resource Person</div>
+              <div className="nitt-card-sub">PDP / ITEC Programmes</div>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 }
-
-export default CoursePage;

@@ -8,41 +8,25 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); // 🔥 get login function
+  const { login, isAdmin } = useContext(AuthContext);
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // ✅ Admin Login
-    if (email === "admin@nitttrc.com" && password === "1234") {
+    const res = login(email, password);
 
-      const userData = {
-        name: "Admin",
-        role: "admin"
-      };
-
-      login(userData);  // 🔥 save in context
-      alert("Admin Login Successful!");
-
-      navigate("/head"); // go to Head page
+    if (!res.ok) {
+      alert(res.message);
+      return;
     }
 
-    // ✅ Normal User (optional)
-    else if (email === "user@nitttrc.com" && password === "1234") {
+    alert("Login Successful!");
 
-      const userData = {
-        name: "User",
-        role: "user"
-      };
-
-      login(userData);
-      alert("User Login Successful!");
-
-      navigate("/");
-    }
-
-    else {
-      alert("Invalid Credentials");
+    // 🔐 Admin → show CRUD pages
+    if (email === "admin@nitttrc.com") {
+      navigate("/head");   // admin route
+    } else {
+      navigate("/");       // normal page (if needed later)
     }
   };
 

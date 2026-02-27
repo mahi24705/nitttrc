@@ -15,6 +15,7 @@ import OutsideWorld from "./pages/OutsideWorld";
 import NetworkIncharge from "./pages/NetworkIncharge";
 import AudioIncharge from "./pages/AudioIncharge";
 import Dc from "./pages/Dc";
+import InvitedTalks from "./pages/InvitedTalks";
 
 /* ✅ NEW IMPORTS */
 import AsCoordinator from "./pages/AsCoordinator";
@@ -41,7 +42,7 @@ function App() {
         {/* ✅ NEW ROUTES */}
         <Route path="/as-coordinator" element={<AsCoordinator />} />
         <Route path="/pdp-resource" element={<PdpResource />} />
-
+        <Route path="/invited-talks" element={<InvitedTalks />} />
         <Route path="/award" element={<AwardPage />} />
         <Route path="/publication" element={<PublicationPage />} />
         <Route path="/gallery" element={<GalleryPage />} />

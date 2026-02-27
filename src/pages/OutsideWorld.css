@@ -1,48 +1,174 @@
-.outside-container {
-  padding: 30px;
-  background: #ffffff;
-  border-radius: 12px;
-  width: 90%;
-  margin: auto;
+/* FULL PAGE BG */
+.outside-page {
+  min-height: 100vh;
+  padding: 40px 18px;
+  background: #677487; /* similar to screenshot */
 }
 
-.outside-title {
+.outside-main-title {
   text-align: center;
-  margin-bottom: 30px;
+  color: #eaf2ff;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 26px;
 }
 
-.outside-section {
-  margin-bottom: 25px;
+/* GRID LIKE DASHBOARD */
+.outside-card-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
 }
 
-.outside-section h3 {
-  text-align: left;
-  margin-bottom: 10px;
+@media (max-width: 1000px) {
+  .outside-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 650px) {
+  .outside-card-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-ul {
-  padding-left: 20px;
-}
-
-li {
-  margin-bottom: 8px;
-}
-
-.admin-box {
-  margin-top: 10px;
-}
-
-input {
-  padding: 6px;
-  margin-right: 10px;
-}
-
-button {
-  padding: 5px 10px;
+/* DASHBOARD CARD */
+.outside-dashboard-card {
+  background: #6f7c90;
+  border-radius: 14px;
+  padding: 34px 20px;
+  text-align: center;
   cursor: pointer;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.outside-dashboard-card:hover {
+  transform: translateY(-4px);
+  opacity: 0.95;
+}
+
+.dash-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #17d0ff; /* cyan title like screenshot */
+}
+
+.dash-subtitle {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #eaf2ff;
+  font-weight: 600;
+}
+
+/* HEADER ROW ON DETAIL PAGE */
+.outside-header-row {
+  max-width: 900px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #eaf2ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.back-btn:hover {
+  opacity: 0.9;
+}
+
+/* DETAIL CARD */
+.outside-detail-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #6f7c90;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* LIST */
+.detail-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #eaf2ff;
+}
+
+.empty-text {
+  list-style: none;
+  padding-left: 0;
+  color: rgba(234, 242, 255, 0.8);
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.detail-text {
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* ADMIN BOX */
+.admin-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.admin-input {
+  flex: 1;
+  padding: 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #eaf2ff;
+}
+
+.admin-input::placeholder {
+  color: rgba(234, 242, 255, 0.7);
+}
+
+.admin-add-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #17d0ff;
+  color: #06202a;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.admin-add-btn:hover {
+  opacity: 0.92;
 }
 
 .delete-btn {
-  margin-left: 10px;
-  color: red;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 10px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.delete-btn:hover {
+  opacity: 0.9;
 }

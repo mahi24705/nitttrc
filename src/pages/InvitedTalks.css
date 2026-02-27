@@ -1,0 +1,261 @@
+.pdp-page{
+  background:#eef3f9;
+  min-height:100vh;
+  padding:22px 18px 40px;
+}
+
+.pdp-hero{
+  max-width:1200px;
+  margin:0 auto 18px;
+  background: linear-gradient(180deg,#0e416c,#0b3255);
+  border-radius:22px;
+  padding:22px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  box-shadow:0 14px 28px rgba(0,0,0,0.12);
+}
+
+.pdp-hero-left h1{
+  margin:0;
+  color:#fff;
+  font-size:34px;
+  font-weight:900;
+}
+.pdp-hero-left p{
+  margin:6px 0 0;
+  color:rgba(255,255,255,0.9);
+  font-weight:600;
+}
+
+.pdp-hero-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.pdp-search{
+  width:min(420px, 58vw);
+  height:44px;
+  border-radius:14px;
+  border:none;
+  outline:none;
+  padding:0 16px;
+  font-size:14px;
+}
+
+.pdp-reset{
+  height:44px;
+  padding:0 18px;
+  border-radius:14px;
+  border:none;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.pdp-form-card{
+  max-width:1200px;
+  margin:0 auto 18px;
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 10px 22px rgba(0,0,0,0.08);
+}
+
+.pdp-form-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:12px;
+}
+
+.pdp-form-grid input,
+.pdp-form-grid select{
+  height:42px;
+  border-radius:12px;
+  border:1px solid #dbe5f2;
+  padding:0 12px;
+  outline:none;
+  font-size:14px;
+}
+
+.pdp-form-grid textarea{
+  grid-column: 1 / -1;
+  border-radius:12px;
+  border:1px solid #dbe5f2;
+  padding:10px 12px;
+  outline:none;
+  font-size:14px;
+  resize:vertical;
+}
+
+.pdp-form-actions{
+  grid-column: 1 / -1;
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+
+.btn-primary{
+  background:#0e416c;
+  color:#fff;
+  border:none;
+  height:42px;
+  padding:0 18px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn-ghost{
+  background:#eef3f9;
+  color:#0e416c;
+  border:none;
+  height:42px;
+  padding:0 18px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.pdp-body{
+  max-width:1200px;
+  margin:0 auto;
+}
+
+.pdp-empty{
+  background:#fff;
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 10px 22px rgba(0,0,0,0.08);
+  color:#334155;
+  font-weight:700;
+}
+
+.pdp-section{
+  background:#fff;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 10px 22px rgba(0,0,0,0.08);
+  margin-bottom:18px;
+}
+
+.pdp-section-head{
+  background:#e8f1fb;
+  padding:16px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #d6e6fb;
+}
+
+.pdp-date{
+  color:#0e416c;
+  font-size:22px;
+  font-weight:900;
+}
+
+.pdp-badge{
+  background:#fff;
+  border:1px solid #d6e6fb;
+  padding:7px 12px;
+  border-radius:999px;
+  font-weight:900;
+  color:#0e416c;
+}
+
+.pdp-table{
+  padding:0;
+}
+
+.pdp-row{
+  display:grid;
+  grid-template-columns: 90px 140px 1.7fr 1fr 140px 170px;
+  gap:12px;
+  padding:14px 18px;
+  align-items:center;
+  border-top:1px solid #eef3f9;
+}
+
+.pdp-row-head{
+  border-top:none;
+  background:#f8fbff;
+  font-weight:900;
+  color:#334155;
+}
+
+.pdp-code{
+  font-weight:900;
+  color:#0f172a;
+}
+
+.pdp-programme{
+  font-weight:800;
+  color:#0f172a;
+  line-height:1.35;
+}
+
+.pdp-duration{
+  color:#334155;
+  font-weight:700;
+}
+
+.pdp-pill{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:13px;
+  background:#e9eef5;
+  color:#0e416c;
+}
+
+.pdp-actions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-start;
+}
+
+.pdp-edit{
+  background:#ffe7b3;
+  border:1px solid #f6c35a;
+  color:#5b3a00;
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.pdp-delete{
+  background:#ffd6da;
+  border:1px solid #f08a93;
+  color:#8a0b16;
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.pdp-edit:disabled,
+.pdp-delete:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* responsive */
+@media (max-width: 1050px){
+  .pdp-row{
+    grid-template-columns: 70px 120px 1.7fr 1fr 120px 160px;
+  }
+}
+@media (max-width: 850px){
+  .pdp-form-grid{ grid-template-columns: 1fr 1fr; }
+  .pdp-row{
+    grid-template-columns: 60px 110px 1fr;
+    row-gap:8px;
+  }
+  .pdp-row > div:nth-child(4),
+  .pdp-row > div:nth-child(5),
+  .pdp-row > div:nth-child(6){
+    grid-column: 1 / -1;
+  }
+}

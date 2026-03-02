@@ -1,268 +1,233 @@
-import { useEffect, useMemo, useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext"; // ✅ if your file is inside src/pages/OutsideWorld/
+import { useEffect, useMemo, useState } from "react";
 import "./InvitedTalks.css";
 
-function InvitedTalks() {
-  const { user } = useContext(AuthContext);
+const STORAGE_KEY = "invited_talks_v1";
 
-  // ✅ LocalStorage Key
-  const STORAGE_KEY = "invited_talks_pdp";
+/* 🔹 INITIAL DATA (UNCHANGED CONTENT) */
+const INITIAL_TALKS = [
+  {
+    date: "31.01.2026",
+    title:
+      'Dr.S.Sakthivel Murugan delivered a talk on “Role of EEE in underwater” at St.Josephs College of engineering on 29.01.2026'
+  },
+  {
+    date: "31.12.2025",
+    title:
+      'Dr.S.Sakthivel Murugan delivered a talk on “Effective Proposal drafting for easy funding opportunity” in the five days brainstorming workshop on research proposal writing organized by Kongu engineering College on December 1-5, 2025'
+  },
+  {
+    date: "29.09.2025",
+    title:
+      'Delivered a keynote address on “Underwater ROV” in the 4th International Conference on Engineering, Science and Technology (ICEST 2025) held at University Batanghari Jambi, Indonesia on 24.09.2025.'
+  },
+  {
+    date: "29.09.2025",
+    title:
+      'Delivered Inauguration & Keynote on “State of Underwater Autonomy in India” in the “Dive into Autonomy: A 5-Day Hands-On Workshop on Autonomous Underwater Vehicles ” held at SRM University, kattankulathur on 22.09.2025.'
+  },
+  {
+    date: "29.09.2025",
+    title:
+      'Delivered a talk on “Underwater wireless Communication” in the national seminar on ”the rise of blue finance” held at SRM University, kattankulathur on 11.09.2025.'
+  },
+  {
+    date: "28.03.2025",
+    title:
+      'Invited Speaker and delivered a talk on “Underwater signal and Image Processing” at Green Revolution in Electronics Engineering and Networks Conference (GREENCON 2025) held on 20.03.2025 at VIT Chennai'
+  },
+  {
+    date: "28.03.2025",
+    title:
+      'Delivered a talk on “Underwater Sensors - Active/passive and its application in Ocean” for the Faculty Development Program (FDP) on “AI/ML and IOT applications to multi-domain engineering fields - Hands on sessions” held at VIT Vellore on 19.03.2025'
+  },
+  {
+    date: "28.10.2024",
+    title:
+      'Session Chair in an International Conference “ASIANComNet 2024 – 2024 Asian Conference on Communication and Networks” on 26.10.2024 FN.'
+  },
+  {
+    date: "28.10.2024",
+    title:
+      'Delivered a talk on “Underwater Sensors and Its Applications” as keynote speaker in ASIANComNet 2024 on 26.10.2024 AN.'
+  }
+];
 
-  // ✅ Each record structure:
-  // { dateGroup:"31.01.2026", code:"PDP", programme:"...", duration:"05.01.2026 - 09.01.2026", mode:"Contact" }
+function normalize(s) {
+  return (s || "").toLowerCase().trim();
+}
 
-  const load = () => JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  const [rows, setRows] = useState(load);
+function dateKey(ddmmyyyy) {
+  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
+  if (!m) return 0;
+  const [, dd, mm, yy] = m;
+  return Number(`${yy}${mm}${dd}`);
+}
 
-  // header search
-  const [query, setQuery] = useState("");
-
-  // admin form (optional)
-  const [form, setForm] = useState({
-    dateGroup: "",
-    code: "",
-    programme: "",
-    duration: "",
-    mode: "Contact",
+export default function InvitedTalks() {
+  const [search, setSearch] = useState("");
+  const [talks, setTalks] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : INITIAL_TALKS;
   });
 
-  // edit state
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [form, setForm] = useState({ date: "", title: "" });
+  const [editIndex, setEditIndex] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
-  }, [rows]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(talks));
+  }, [talks]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return rows;
+    if (!search) return talks;
+    return talks.filter((t) =>
+      normalize(`${t.date} ${t.title}`).includes(normalize(search))
+    );
+  }, [talks, search]);
 
-    return rows.filter((r) => {
-      return (
-        (r.dateGroup || "").toLowerCase().includes(q) ||
-        (r.code || "").toLowerCase().includes(q) ||
-        (r.programme || "").toLowerCase().includes(q) ||
-        (r.duration || "").toLowerCase().includes(q) ||
-        (r.mode || "").toLowerCase().includes(q)
-      );
-    });
-  }, [rows, query]);
-
-  // group by dateGroup
   const grouped = useMemo(() => {
-    const map = {};
-    filtered.forEach((r) => {
-      map[r.dateGroup] = map[r.dateGroup] || [];
-      map[r.dateGroup].push(r);
-    });
-
-    // sort groups newest-first by dd.mm.yyyy
-    const toSortable = (d) => {
-      const [dd, mm, yyyy] = (d || "").split(".");
-      return `${yyyy || "0000"}-${mm || "00"}-${dd || "00"}`;
-    };
-
-    return Object.keys(map)
-      .sort((a, b) => (toSortable(b) > toSortable(a) ? 1 : -1))
-      .map((dateGroup) => ({ dateGroup, items: map[dateGroup] }));
-  }, [filtered]);
-
-  const resetSearch = () => setQuery("");
-
-  const clearForm = () => {
-    setForm({ dateGroup: "", code: "", programme: "", duration: "", mode: "Contact" });
-    setEditingIndex(null);
-  };
-
-  const addOrUpdate = () => {
-    const dateGroup = form.dateGroup.trim();
-    const programme = form.programme.trim();
-
-    if (!dateGroup || !programme) return;
-
-    const payload = {
-      dateGroup,
-      code: form.code.trim() || "-",
-      programme,
-      duration: form.duration.trim() || "-",
-      mode: form.mode || "Contact",
-    };
-
-    if (editingIndex !== null) {
-      setRows((prev) => prev.map((r, i) => (i === editingIndex ? payload : r)));
-    } else {
-      setRows((prev) => [payload, ...prev]);
+    const map = new Map();
+    for (const t of filtered) {
+      if (!map.has(t.date)) map.set(t.date, []);
+      map.get(t.date).push(t);
     }
 
-    clearForm();
-  };
+    const entries = Array.from(map.entries());
+    entries.sort((a, b) => dateKey(b[0]) - dateKey(a[0]));
+    return entries;
+  }, [filtered]);
 
-  const onEdit = (globalIndex) => {
-    const r = rows[globalIndex];
-    setForm({
-      dateGroup: r.dateGroup || "",
-      code: r.code || "",
-      programme: r.programme || "",
-      duration: r.duration || "",
-      mode: r.mode || "Contact",
-    });
-    setEditingIndex(globalIndex);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.date || !form.title) return;
 
-  const onDelete = (globalIndex) => {
-    setRows((prev) => prev.filter((_, i) => i !== globalIndex));
-  };
+    if (editIndex !== null) {
+      const updated = talks.map((t, i) =>
+        i === editIndex ? form : t
+      );
+      setTalks(updated);
+    } else {
+      setTalks([form, ...talks]);
+    }
 
-  // To map grouped rows back to original index for edit/delete
-  const findGlobalIndex = (item) => {
-    // because objects are saved by value, safest match by fields
-    return rows.findIndex(
-      (r) =>
-        r.dateGroup === item.dateGroup &&
-        r.code === item.code &&
-        r.programme === item.programme &&
-        r.duration === item.duration &&
-        r.mode === item.mode
+    setForm({ date: "", title: "" });
+    setEditIndex(null);
+  }
+
+  function handleEdit(date, index) {
+    const item = grouped
+      .find(([d]) => d === date)[1][index];
+    const globalIndex = talks.findIndex(
+      (t) => t.date === item.date && t.title === item.title
     );
-  };
+    setEditIndex(globalIndex);
+    setForm(item);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleDelete(date, index) {
+    const item = grouped
+      .find(([d]) => d === date)[1][index];
+    setTalks(
+      talks.filter(
+        (t) => !(t.date === item.date && t.title === item.title)
+      )
+    );
+  }
 
   return (
-    <div className="pdp-page">
-      {/* ✅ TOP HEADER BAR (like PDP screenshot) */}
-      <div className="pdp-hero">
-        <div className="pdp-hero-left">
-          <h1>Invited Talks</h1>
-          <p>PDP Format Template</p>
+    <div className="page">
+      <header className="hero">
+        <div>
+          <h1>Outside World Interaction</h1>
+          <p>Invited Talks & Academic Contributions</p>
         </div>
 
-        <div className="pdp-hero-right">
-          <input
-            className="pdp-search"
-            placeholder="Search: date / code / title / mode..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <button className="pdp-reset" onClick={resetSearch} type="button">
-            Reset
-          </button>
-        </div>
-      </div>
+        <input
+          className="search"
+          placeholder="Search by date or keyword..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </header>
 
-      {/* ✅ ADMIN ADD / EDIT FORM (optional but useful) */}
-      {user?.role === "admin" && (
-        <div className="pdp-form-card">
-          <div className="pdp-form-grid">
-            <input
-              placeholder="Date Group (dd.mm.yyyy) e.g., 31.01.2026"
-              value={form.dateGroup}
-              onChange={(e) => setForm({ ...form, dateGroup: e.target.value })}
-            />
-            <input
-              placeholder="Code (optional) e.g., PDP / CONF"
-              value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value })}
-            />
-            <input
-              placeholder="Duration (optional) e.g., 05.01.2026 - 09.01.2026"
-              value={form.duration}
-              onChange={(e) => setForm({ ...form, duration: e.target.value })}
-            />
-            <select
-              value={form.mode}
-              onChange={(e) => setForm({ ...form, mode: e.target.value })}
-            >
-              <option value="Contact">Contact</option>
-              <option value="Physical">Physical</option>
-              <option value="Online">Online</option>
-              <option value="Hybrid">Hybrid</option>
-            </select>
-
-            <textarea
-              placeholder="Programme / Talk Title + Details (you will paste your content here)"
-              value={form.programme}
-              onChange={(e) => setForm({ ...form, programme: e.target.value })}
-              rows={3}
-            />
-
-            <div className="pdp-form-actions">
-              <button className="btn-primary" type="button" onClick={addOrUpdate}>
-                {editingIndex !== null ? "Update" : "Add"}
-              </button>
-              <button className="btn-ghost" type="button" onClick={clearForm}>
-                Clear
-              </button>
+      <div className="content">
+        {grouped.map(([date, arr]) => (
+          <section key={date} className="group">
+            <div className="group-head">
+              <div className="group-date">{date}</div>
+              <div className="group-count">
+                {arr.length} Talk{arr.length > 1 ? "s" : ""}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* ✅ GROUPED SECTIONS */}
-      <div className="pdp-body">
-        {grouped.length === 0 ? (
-          <div className="pdp-empty">No content yet</div>
-        ) : (
-          grouped.map((g) => (
-            <div className="pdp-section" key={g.dateGroup}>
-              <div className="pdp-section-head">
-                <span className="pdp-date">{g.dateGroup}</span>
-                <span className="pdp-badge">{g.items.length} Programme{g.items.length > 1 ? "s" : ""}</span>
+            <div className="table">
+              <div className="tr head">
+                <div>S.No</div>
+                <div>Details</div>
+                <div>Action</div>
               </div>
 
-              {/* ✅ TABLE (like screenshot) */}
-              <div className="pdp-table">
-                <div className="pdp-row pdp-row-head">
-                  <div>S.NO</div>
-                  <div>CODE</div>
-                  <div>PROGRAMME</div>
-                  <div>DURATION</div>
-                  <div>MODE</div>
-                  <div>ACTION</div>
+              {arr.map((talk, idx) => (
+                <div className="tr" key={idx}>
+                  <div>{idx + 1}</div>
+                  <div className="talk-title">{talk.title}</div>
+                  <div className="actions">
+                    <button
+                      className="edit"
+                      onClick={() => handleEdit(date, idx)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="del"
+                      onClick={() => handleDelete(date, idx)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-
-                {g.items.map((item, idx) => {
-                  const globalIndex = findGlobalIndex(item);
-                  return (
-                    <div className="pdp-row" key={idx}>
-                      <div>{idx + 1}</div>
-                      <div className="pdp-code">{item.code}</div>
-                      <div className="pdp-programme">{item.programme}</div>
-                      <div className="pdp-duration">{item.duration}</div>
-                      <div>
-                        <span className={`pdp-pill ${item.mode?.toLowerCase()}`}>
-                          {item.mode}
-                        </span>
-                      </div>
-                      <div className="pdp-actions">
-                        <button
-                          className="pdp-edit"
-                          type="button"
-                          onClick={() => onEdit(globalIndex)}
-                          disabled={user?.role !== "admin"}
-                          title={user?.role !== "admin" ? "Admin only" : "Edit"}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="pdp-delete"
-                          type="button"
-                          onClick={() => onDelete(globalIndex)}
-                          disabled={user?.role !== "admin"}
-                          title={user?.role !== "admin" ? "Admin only" : "Delete"}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              ))}
             </div>
-          ))
-        )}
+          </section>
+        ))}
       </div>
+
+      <div className="panel bottom-form">
+        <h2>{editIndex !== null ? "Edit Talk" : "Add Talk"}</h2>
+
+        <form onSubmit={handleSubmit} className="form">
+          <label>
+            Date (DD.MM.YYYY)
+            <input
+              value={form.date}
+              onChange={(e) =>
+                setForm({ ...form, date: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Talk Details
+            <textarea
+              rows="4"
+              value={form.title}
+              onChange={(e) =>
+                setForm({ ...form, title: e.target.value })
+              }
+            />
+          </label>
+
+          <div className="btns">
+            <button className="primary">
+              {editIndex !== null ? "Update" : "Add"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <footer className="footer">
+        Saved locally in browser (localStorage).
+      </footer>
     </div>
   );
 }
-
-export default InvitedTalks;

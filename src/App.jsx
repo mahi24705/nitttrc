@@ -21,6 +21,14 @@ import InvitedTalks from "./pages/InvitedTalks";
 import AsCoordinator from "./pages/AsCoordinator";
 import PdpResource from "./pages/PdpResource";
 
+/* ✅ NEW PAGES (SAME TEMPLATE STYLE) */
+import Pg from "./pages/Pg";
+import Itec from "./pages/Itec";
+import HostInstitution from "./pages/HostInstitution";
+import Workshops from "./pages/Workshops";
+import InternationalCollaboration from "./pages/InternationalCollaboration";
+import GuestLectures from "./pages/GuestLectures";
+
 import "./App.css";
 
 function App() {
@@ -39,10 +47,22 @@ function App() {
         <Route path="/course" element={<CoursePage />} />
         <Route path="/course/pdp" element={<CoursePage />} />
 
-        {/* ✅ NEW ROUTES */}
+        {/* ✅ EXISTING */}
         <Route path="/as-coordinator" element={<AsCoordinator />} />
         <Route path="/pdp-resource" element={<PdpResource />} />
         <Route path="/invited-talks" element={<InvitedTalks />} />
+
+        {/* ✅ NEW ROUTES */}
+        <Route path="/pg" element={<Pg />} />
+        <Route path="/itec" element={<Itec />} />
+        <Route path="/host-institution" element={<HostInstitution />} />
+        <Route path="/workshops" element={<Workshops />} />
+        <Route
+          path="/international-collaboration"
+          element={<InternationalCollaboration />}
+        />
+        <Route path="/guest-lectures" element={<GuestLectures />} />
+
         <Route path="/award" element={<AwardPage />} />
         <Route path="/publication" element={<PublicationPage />} />
         <Route path="/gallery" element={<GalleryPage />} />

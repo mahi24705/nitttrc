@@ -9,17 +9,15 @@ const STORAGE_KEY = "nitttrc_auth_user";
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
-  // restore session on refresh
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setUser(JSON.parse(raw));
-    } catch (e) {
+    } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
-  // login ONLY if admin credentials match
   const login = (email, password) => {
     const ok = email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
 

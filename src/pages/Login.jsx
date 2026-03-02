@@ -8,7 +8,7 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
-  const { login, isAdmin } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -20,14 +20,8 @@ function Login() {
       return;
     }
 
-    alert("Login Successful!");
-
-    // 🔐 Admin → show CRUD pages
-    if (email === "admin@nitttrc.com") {
-      navigate("/head");   // admin route
-    } else {
-      navigate("/");       // normal page (if needed later)
-    }
+    alert("Admin Login Successful!");
+    navigate("/head");
   };
 
   return (

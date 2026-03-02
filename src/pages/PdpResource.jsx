@@ -26,12 +26,36 @@ function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
 
-// DD.MM.YYYY -> sortable number
-function dateKey(ddmmyyyy) {
+/* ✅ Convert DD.MM.YYYY -> "MMM YYYY" (ex: 31.12.2025 -> "DEC 2025") */
+function monthYearFromDDMMYYYY(ddmmyyyy) {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
+  if (!m) return "—";
+  const [, , mm, yy] = m;
+
+  const months = [
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+  ];
+
+  const idx = Number(mm) - 1;
+  return `${months[idx] || "—"} ${yy}`;
+}
+
+/* ✅ Sort key for "MMM YYYY" */
+function monthYearKey(monYear) {
+  const m = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
+    (monYear || "").trim().toUpperCase()
+  );
   if (!m) return 0;
-  const [, dd, mm, yy] = m;
-  return Number(`${yy}${mm}${dd}`);
+
+  const months = {
+    JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+    JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+  };
+
+  const mon = months[m[1]] || "00";
+  const yr = m[2];
+  return Number(`${yr}${mon}00`);
 }
 
 function pillClass(mode) {
@@ -56,7 +80,9 @@ function parseRawToItems(raw) {
     const modeMatch = line.match(/\((Contact|Online|Physical)\s*mode\)/i);
     const codeMatch = line.match(/([A-Z]{2,}-?\d+-?\d*)/);
 
-    const date = dateMatch ? dateMatch[0] : "—";
+    const rawDate = dateMatch ? dateMatch[0] : "—";
+    const date = monthYearFromDDMMYYYY(rawDate); // ✅ group label = MONTH YEAR
+
     const duration = durationMatch
       ? durationMatch[1].replace(/[–—]/g, "-").replace(/\s+/g, " ").trim()
       : "—";
@@ -66,7 +92,7 @@ function parseRawToItems(raw) {
     const code = codeMatch ? codeMatch[1] : "PDP";
 
     const title = line
-      .replace(date, "")
+      .replace(rawDate, "")
       .replace(code, "")
       .replace(/\(.*?\)/g, "")
       .replace(/served as resource person.*$/i, "")
@@ -78,7 +104,8 @@ function parseRawToItems(raw) {
 
     return {
       id: crypto.randomUUID(),
-      date,
+      date,        // ✅ now like "DEC 2025"
+      rawDate,     // ✅ keep original for searching if needed
       code,
       title: title || "—",
       duration: duration || "—",
@@ -128,32 +155,31 @@ export default function PdpResource() {
   const filteredItems = useMemo(() => {
     const query = normalize(q);
     if (!query) return items;
+
+    // ✅ Search will match: "DEC 2025", "2025", "DEC", also old "31.12.2025"
     return items.filter((it) =>
-      normalize(`${it.date} ${it.code} ${it.title} ${it.duration} ${it.mode}`).includes(
-        query
-      )
+      normalize(
+        `${it.date} ${it.rawDate || ""} ${it.code} ${it.title} ${it.duration} ${it.mode}`
+      ).includes(query)
     );
   }, [items, q]);
 
-  // ✅ GROUP + SORT: date groups newest first, inside group newest createdAt first
+  // ✅ GROUP + SORT: month-year groups newest first, inside group newest createdAt first
   const grouped = useMemo(() => {
     const map = new Map();
     for (const it of filteredItems) {
-      const key = it.date || "—";
+      const key = it.date || "—"; // ✅ month-year group
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(it);
     }
 
     const entries = Array.from(map.entries());
 
-    // 1) sort items inside each date group: newest added first
     for (const [, arr] of entries) {
       arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     }
 
-    // 2) sort DATE groups: newest date first (TOP)
-    entries.sort((a, b) => dateKey(b[0]) - dateKey(a[0]));
-
+    entries.sort((a, b) => monthYearKey(b[0]) - monthYearKey(a[0]));
     return entries;
   }, [filteredItems]);
 
@@ -178,18 +204,34 @@ export default function PdpResource() {
       return;
     }
 
+    // ✅ IMPORTANT: Admin enters date as DD.MM.YYYY in form.
+    // Convert it to month-year for grouping, but keep rawDate too.
+    const rawDate = payload.date;
+    const monthYear = monthYearFromDDMMYYYY(rawDate);
+
     if (editingId) {
       setItems((prev) =>
         prev.map((it) =>
           it.id === editingId
-            ? { ...it, ...payload, createdAt: it.createdAt || Date.now() }
+            ? {
+                ...it,
+                ...payload,
+                date: monthYear,
+                rawDate,
+                createdAt: it.createdAt || Date.now(),
+              }
             : it
         )
       );
     } else {
-      // ✅ NEW item always treated newest
       setItems((prev) => [
-        { id: crypto.randomUUID(), createdAt: Date.now(), ...payload },
+        {
+          id: crypto.randomUUID(),
+          createdAt: Date.now(),
+          ...payload,
+          date: monthYear,
+          rawDate,
+        },
         ...prev,
       ]);
     }
@@ -200,7 +242,8 @@ export default function PdpResource() {
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      date: item.date || "",
+      // ✅ Show original DD.MM.YYYY in input
+      date: item.rawDate || "",
       code: item.code || "",
       title: item.title || "",
       duration: item.duration || "",
@@ -234,7 +277,7 @@ export default function PdpResource() {
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search: date / code / title / mode..."
+            placeholder="Search: month / year / code / title / mode..."
           />
           <button className="ghost" onClick={resetAll} title="Reset">
             Reset
@@ -295,7 +338,6 @@ export default function PdpResource() {
         )}
       </div>
 
-      {/* ✅ MOVE FORM TO BOTTOM (NO LOGIC CHANGE) */}
       {isAdmin && (
         <div className="panel bottom-form">
           <h2>{editingId ? "Edit Programme" : "Add Programme"}</h2>

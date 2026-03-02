@@ -15,8 +15,18 @@ function monthYearFromDDMMYYYY(ddmmyyyy) {
   const [, , mm, yy] = m;
 
   const months = [
-    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC",
   ];
 
   const idx = Number(mm) - 1;
@@ -31,8 +41,18 @@ function monthYearKey(monYear) {
   if (!m) return 0;
 
   const months = {
-    JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-    JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+    JAN: "01",
+    FEB: "02",
+    MAR: "03",
+    APR: "04",
+    MAY: "05",
+    JUN: "06",
+    JUL: "07",
+    AUG: "08",
+    SEP: "09",
+    OCT: "10",
+    NOV: "11",
+    DEC: "12",
   };
 
   const mon = months[m[1]] || "00";
@@ -49,26 +69,95 @@ function pillClass(mode) {
 
 /* ---------- Date helpers (UI <-> DB) ---------- */
 
+/** DD.MM.YYYY -> YYYY-MM-DD */
 function ddmmyyyyToIso(ddmmyyyy) {
-  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
-  if (!m) return null;
+  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((ddmmyyyy || "").trim());
+  if (!m) return "";
   const [, dd, mm, yyyy] = m;
-  return `${yyyy}-${mm}-${dd}`; // LocalDate expects YYYY-MM-DD
+  return `${yyyy}-${mm}-${dd}`;
 }
 
+/** YYYY-MM-DD -> DD.MM.YYYY */
 function isoToDDMMYYYY(iso) {
   if (!iso) return "";
   const s = String(iso);
-  // if backend returns "2025-12-31T00:00:00" or similar, take first 10 chars
   const pure = s.length >= 10 ? s.slice(0, 10) : s;
-  const [yyyy, mm, dd] = pure.split("-");
-  if (!yyyy || !mm || !dd) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(pure);
+  if (!m) return "";
+  const [, yyyy, mm, dd] = m;
   return `${dd}.${mm}.${yyyy}`;
+}
+
+/** ✅ Validate a real calendar date (rejects 31.02.2004 etc.) */
+function isValidIsoDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
+  if (!m) return false;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === mo - 1 &&
+    dt.getUTCDate() === d
+  );
+}
+
+/** ✅ Accepts BOTH:
+ *  - "31.12.2025"
+ *  - "JAN 2025"
+ * Returns:
+ *  displayDateIso: "YYYY-MM-DD"
+ *  uiDate: always "DD.MM.YYYY" (for storing in rawDate / input)
+ */
+function parseDateInputToIsoAndUi(dateInput) {
+  const s = (dateInput || "").trim().toUpperCase();
+
+  // DD.MM.YYYY
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
+    const iso = ddmmyyyyToIso(s);
+    if (!iso || !isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
+    return { displayDateIso: iso, uiDate: s };
+  }
+
+  // "JAN 2025"
+  const monYear =
+    /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
+  if (monYear) {
+    const monMap = {
+      JAN: "01",
+      FEB: "02",
+      MAR: "03",
+      APR: "04",
+      MAY: "05",
+      JUN: "06",
+      JUL: "07",
+      AUG: "08",
+      SEP: "09",
+      OCT: "10",
+      NOV: "11",
+      DEC: "12",
+    };
+    const mm = monMap[monYear[1]];
+    const yyyy = monYear[2];
+
+    // we store/display the date as 1st of that month
+    const iso = `${yyyy}-${mm}-01`;
+    const ui = `01.${mm}.${yyyy}`;
+
+    if (!isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
+    return { displayDateIso: iso, uiDate: ui };
+  }
+
+  return { displayDateIso: "", uiDate: "" };
 }
 
 function parseDuration(duration) {
   // Expected: "08.12.2025 - 12.12.2025"
-  const parts = (duration || "").split("-").map((s) => s.trim());
+  const parts = (duration || "")
+    .replace(/[–—]/g, "-")
+    .split("-")
+    .map((s) => s.trim());
   return { startDD: parts[0] || "", endDD: parts[1] || "" };
 }
 
@@ -81,7 +170,7 @@ export default function AsCoordinator() {
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
-    date: "", // DD.MM.YYYY
+    date: "", // ✅ DD.MM.YYYY OR "JAN 2025"
     code: "",
     title: "",
     duration: "", // "DD.MM.YYYY - DD.MM.YYYY"
@@ -104,9 +193,8 @@ export default function AsCoordinator() {
 
           return {
             id: row.id,
-            createdAt: row.id ? Number(row.id) : Date.now(), // just for stable ordering
-            rawDate,
-            date: monthYearFromDDMMYYYY(rawDate),
+            rawDate, // DD.MM.YYYY (always)
+            date: monthYearFromDDMMYYYY(rawDate), // group label
             code: row.code || "",
             title: row.programme || "",
             duration: `${start} - ${end}`.trim(),
@@ -114,7 +202,7 @@ export default function AsCoordinator() {
           };
         });
 
-        // latest first (optional)
+        // newest first
         mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
         setItems(mapped);
       } catch (e) {
@@ -150,7 +238,6 @@ export default function AsCoordinator() {
     const entries = Array.from(map.entries());
 
     for (const [, arr] of entries) {
-      // sort inside group: newest first
       arr.sort((a, b) => (b.id || 0) - (a.id || 0));
     }
 
@@ -167,44 +254,51 @@ export default function AsCoordinator() {
   async function onSubmit(e) {
     e.preventDefault();
 
-    const dateDD = form.date.trim();
+    const dateInput = form.date.trim(); // DD.MM.YYYY or JAN 2025
     const code = form.code.trim();
     const title = form.title.trim();
     const duration = form.duration.trim();
     const mode = form.mode;
 
-    if (!dateDD || !code || !title) {
+    if (!dateInput || !code || !title) {
       alert("Please fill Date, Code, and Programme.");
       return;
     }
 
-    const { startDD, endDD } = parseDuration(duration);
-
-    const payload = {
-      displayDate: ddmmyyyyToIso(dateDD),
-      code,
-      programme: title,
-      startDate: ddmmyyyyToIso(startDD),
-      endDate: ddmmyyyyToIso(endDD),
-      mode,
-    };
-
-    if (!payload.displayDate || !payload.startDate || !payload.endDate) {
-      alert("Please enter Date and Duration in DD.MM.YYYY format.");
+    // ✅ Parse date input same like PdpResource.jsx
+    const { displayDateIso, uiDate } = parseDateInputToIsoAndUi(dateInput);
+    if (!displayDateIso) {
+      alert('Date must be "DD.MM.YYYY" (example: 31.12.2025) OR "JAN 2025".');
       return;
     }
+
+    const { startDD, endDD } = parseDuration(duration);
+    const startIso = ddmmyyyyToIso(startDD);
+    const endIso = ddmmyyyyToIso(endDD);
+
+    if (!startIso || !endIso || !isValidIsoDate(startIso) || !isValidIsoDate(endIso)) {
+      alert('Duration must be "DD.MM.YYYY - DD.MM.YYYY" (example: 08.12.2025 - 12.12.2025).');
+      return;
+    }
+
+    const payload = {
+      displayDate: displayDateIso,
+      code,
+      programme: title,
+      startDate: startIso,
+      endDate: endIso,
+      mode,
+    };
 
     try {
       let res;
       if (editingId) {
-        // UPDATE
         res = await fetch(`${API_BASE}/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        // ADD
         res = await fetch(API_BASE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -215,11 +309,13 @@ export default function AsCoordinator() {
       if (!res.ok) throw new Error("Save failed");
       const saved = await res.json();
 
+      // ✅ store rawDate as DD.MM.YYYY (even if user typed JAN 2025)
+      const rawDateDD = uiDate || dateInput;
+
       const uiItem = {
         id: saved.id,
-        createdAt: saved.id ? Number(saved.id) : Date.now(),
-        rawDate: dateDD,
-        date: monthYearFromDDMMYYYY(dateDD),
+        rawDate: rawDateDD,
+        date: monthYearFromDDMMYYYY(rawDateDD),
         code,
         title,
         duration,
@@ -265,9 +361,7 @@ export default function AsCoordinator() {
     }
   }
 
-  /* ✅ Clear view (DB will still have data) */
   function resetAll() {
-    // This only clears UI search + form. It does NOT delete DB.
     setQ("");
     resetForm();
   }
@@ -356,11 +450,11 @@ export default function AsCoordinator() {
 
           <form onSubmit={onSubmit} className="form">
             <label>
-              Date (DD.MM.YYYY)
+              Date (DD.MM.YYYY or JAN 2025)
               <input
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                placeholder="31.12.2025"
+                placeholder="31.12.2025  (or)  JAN 2025"
               />
             </label>
 
@@ -412,14 +506,14 @@ export default function AsCoordinator() {
               </button>
             </div>
 
-            <div className="note">Tip: Date / Code / Programme are required.</div>
+            <div className="note">
+              Tip: Date / Code / Programme are required. Date supports DD.MM.YYYY or JAN 2025.
+            </div>
           </form>
         </div>
       )}
 
-      <footer className="footer">
-        Now using database (MySQL) via Spring Boot API.
-      </footer>
+      <footer className="footer">Now using database (MySQL) via Spring Boot API.</footer>
     </div>
   );
 }

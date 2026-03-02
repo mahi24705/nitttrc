@@ -8,15 +8,15 @@ function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
 
-/* ✅ Convert DD.MM.YYYY -> "MMM YYYY" (ex: 31.12.2025 -> "DEC 2025") */
+/* ✅ Convert DD.MM.YYYY -> "MMM YYYY" */
 function monthYearFromDDMMYYYY(ddmmyyyy) {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
   if (!m) return "—";
   const [, , mm, yy] = m;
 
   const months = [
-    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+    "JAN","FEB","MAR","APR","MAY","JUN",
+    "JUL","AUG","SEP","OCT","NOV","DEC",
   ];
 
   const idx = Number(mm) - 1;
@@ -47,7 +47,7 @@ function pillClass(mode) {
   return "pill other";
 }
 
-/** DD.MM.YYYY -> YYYY-MM-DD (for backend LocalDate) */
+/** DD.MM.YYYY -> YYYY-MM-DD */
 function ddmmyyyyToIso(ddmmyyyy) {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((ddmmyyyy || "").trim());
   if (!m) return "";
@@ -63,7 +63,7 @@ function isoToDdmmyyyy(iso) {
   return `${dd}.${mm}.${yy}`;
 }
 
-/** ✅ Validate a real calendar date (rejects 31.02.2004 etc.) */
+/** ✅ Validate a real calendar date */
 function isValidIsoDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
   if (!m) return false;
@@ -78,27 +78,19 @@ function isValidIsoDate(iso) {
   );
 }
 
-/** ✅ Accepts BOTH:
- *  - "31.12.2025"
- *  - "JAN 2025"
- * Returns:
- *  - displayDateIso (YYYY-MM-DD)
- *  - uiDate (DD.MM.YYYY)  (for showing in table/input after save)
- */
+/** ✅ Accepts BOTH "31.12.2025" and "JAN 2025" */
 function parseDateInputToIsoAndUi(dateInput) {
   const s = (dateInput || "").trim().toUpperCase();
 
-  // DD.MM.YYYY
   if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
     const iso = ddmmyyyyToIso(s);
     if (!iso || !isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
     return { displayDateIso: iso, uiDate: s };
   }
 
-  // "JAN 2025"
-  const monYear = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
-    s
-  );
+  const monYear =
+    /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
+
   if (monYear) {
     const monMap = {
       JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
@@ -106,8 +98,8 @@ function parseDateInputToIsoAndUi(dateInput) {
     };
     const mm = monMap[monYear[1]];
     const yyyy = monYear[2];
-    const iso = `${yyyy}-${mm}-01`;     // store first day of that month
-    const ui = `01.${mm}.${yyyy}`;      // show as DD.MM.YYYY in UI
+    const iso = `${yyyy}-${mm}-01`;
+    const ui = `01.${mm}.${yyyy}`;
     if (!isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
     return { displayDateIso: iso, uiDate: ui };
   }
@@ -115,11 +107,7 @@ function parseDateInputToIsoAndUi(dateInput) {
   return { displayDateIso: "", uiDate: "" };
 }
 
-/** Parse duration input like:
- *  "05.01.2026 - 09.01.2026"
- *  "05.01.2026 – 09.01.2026"
- *  "05.01.2026 to 09.01.2026"
- */
+/** Duration: "05.01.2026 - 09.01.2026" */
 function parseDurationToIsoRange(duration) {
   const s = (duration || "")
     .replace(/[–—]/g, "-")
@@ -135,13 +123,7 @@ function parseDurationToIsoRange(duration) {
   const start = (parts[0] || "").trim();
   const end = (parts[1] || "").trim();
 
-  const startIso = ddmmyyyyToIso(start);
-  const endIso = ddmmyyyyToIso(end);
-
-  return {
-    startIso,
-    endIso,
-  };
+  return { startIso: ddmmyyyyToIso(start), endIso: ddmmyyyyToIso(end) };
 }
 
 function makeDurationDdMm(startIso, endIso) {
@@ -150,23 +132,25 @@ function makeDurationDdMm(startIso, endIso) {
 }
 
 export default function PdpResource() {
-  const { isAdmin } = useContext(AuthContext);
+  const { user, isAdmin } = useContext(AuthContext);
+  const isLoggedIn = !!user;
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]); // items from DB
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
 
   const [editingId, setEditingId] = useState(null);
+
   const [form, setForm] = useState({
-    date: "",
+    date: "",        // grouping date (month header)
     code: "",
     title: "",
     duration: "",
     mode: "Contact",
+    sessionDate: "", // ✅ actual session date shown in table
   });
 
-  // ✅ Load from DB on page load
   useEffect(() => {
     (async () => {
       try {
@@ -177,10 +161,10 @@ export default function PdpResource() {
         if (!res.ok) throw new Error(`GET failed: ${res.status}`);
         const data = await res.json();
 
-        // Convert DB → UI fields
         const ui = (data || []).map((x) => ({
           id: x.id,
-          date: isoToDdmmyyyy(x.displayDate), // UI shows DD.MM.YYYY
+          date: isoToDdmmyyyy(x.displayDate),        // grouping (same as session for now)
+          sessionDate: isoToDdmmyyyy(x.displayDate), // show in table
           code: x.code || "—",
           title: x.programme || "—",
           duration: makeDurationDdMm(x.startDate, x.endDate),
@@ -190,9 +174,7 @@ export default function PdpResource() {
         setItems(ui);
       } catch (e) {
         console.error(e);
-        setErrMsg(
-          "Could not load data from backend. Check: Spring Boot running on 8080 and CORS allowed."
-        );
+        setErrMsg("Could not load data from backend. Check Spring Boot + CORS.");
       } finally {
         setLoading(false);
       }
@@ -205,36 +187,35 @@ export default function PdpResource() {
 
     return items.filter((it) =>
       normalize(
-        `${it.date} ${monthYearFromDDMMYYYY(it.date)} ${it.code} ${it.title} ${it.duration} ${it.mode}`
+        `${it.date} ${monthYearFromDDMMYYYY(it.date)} ${it.sessionDate} ${it.code} ${it.title} ${it.duration} ${it.mode}`
       ).includes(query)
     );
   }, [items, q]);
 
-  // ✅ GROUP + SORT: month-year groups newest first
   const grouped = useMemo(() => {
     const map = new Map();
     for (const it of filteredItems) {
-      const key = monthYearFromDDMMYYYY(it.date) || "—"; // group label: "DEC 2025"
+      const key = monthYearFromDDMMYYYY(it.date) || "—";
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(it);
     }
 
     const entries = Array.from(map.entries());
-
-    // sort items inside group by id desc (latest first)
-    for (const [, arr] of entries) {
-      arr.sort((a, b) => (b.id || 0) - (a.id || 0));
-    }
-
-    // sort month-year groups newest first
+    for (const [, arr] of entries) arr.sort((a, b) => (b.id || 0) - (a.id || 0));
     entries.sort((a, b) => monthYearKey(b[0]) - monthYearKey(a[0]));
-
     return entries;
   }, [filteredItems]);
 
   function resetForm() {
     setEditingId(null);
-    setForm({ date: "", code: "", title: "", duration: "", mode: "Contact" });
+    setForm({
+      date: "",
+      code: "",
+      title: "",
+      duration: "",
+      mode: "Contact",
+      sessionDate: "",
+    });
   }
 
   async function onSubmit(e) {
@@ -246,30 +227,32 @@ export default function PdpResource() {
       title: form.title.trim(),
       duration: form.duration.trim(),
       mode: form.mode,
+      sessionDate: form.sessionDate.trim(),
     };
 
-    if (!payloadUI.date || !payloadUI.code || !payloadUI.title) {
-      alert("Please fill Date, Code, and Title.");
+    if (!payloadUI.date || !payloadUI.code || !payloadUI.title || !payloadUI.sessionDate) {
+      alert("Please fill Date, Code, Title, and Session Date.");
       return;
     }
 
-    const { displayDateIso, uiDate } = parseDateInputToIsoAndUi(payloadUI.date);
-    if (!displayDateIso) {
-      alert('Date must be "DD.MM.YYYY" (example: 31.12.2025) OR "JAN 2025". Also invalid dates like 31.02.2004 are not allowed.');
+    const { uiDate: groupUi } = parseDateInputToIsoAndUi(payloadUI.date);
+
+    const { displayDateIso: sessionIso, uiDate: sessionUi } =
+      parseDateInputToIsoAndUi(payloadUI.sessionDate);
+
+    if (!sessionIso) {
+      alert('Session Date must be "DD.MM.YYYY" OR "JAN 2025".');
       return;
     }
 
     const { startIso, endIso } = parseDurationToIsoRange(payloadUI.duration);
     if (!startIso || !endIso || !isValidIsoDate(startIso) || !isValidIsoDate(endIso)) {
-      alert(
-        "Duration must contain start and end date in DD.MM.YYYY format.\nExample: 05.01.2026 - 09.01.2026"
-      );
+      alert("Duration must be DD.MM.YYYY - DD.MM.YYYY");
       return;
     }
 
-    // Backend payload
     const body = {
-      displayDate: displayDateIso,
+      displayDate: sessionIso,
       code: payloadUI.code,
       programme: payloadUI.title,
       startDate: startIso,
@@ -291,7 +274,8 @@ export default function PdpResource() {
 
         const updated = {
           id: saved.id,
-          date: isoToDdmmyyyy(saved.displayDate),
+          date: groupUi || payloadUI.date,
+          sessionDate: isoToDdmmyyyy(saved.displayDate),
           code: saved.code,
           title: saved.programme,
           duration: makeDurationDdMm(saved.startDate, saved.endDate),
@@ -310,7 +294,8 @@ export default function PdpResource() {
 
         const created = {
           id: saved.id,
-          date: isoToDdmmyyyy(saved.displayDate),
+          date: groupUi || payloadUI.date,
+          sessionDate: isoToDdmmyyyy(saved.displayDate),
           code: saved.code,
           title: saved.programme,
           duration: makeDurationDdMm(saved.startDate, saved.endDate),
@@ -320,8 +305,11 @@ export default function PdpResource() {
         setItems((prev) => [created, ...prev]);
       }
 
-      // keep input normalized after save (JAN 2025 becomes 01.MM.YYYY)
-      setForm((f) => ({ ...f, date: uiDate || f.date }));
+      setForm((f) => ({
+        ...f,
+        date: groupUi || f.date,
+        sessionDate: sessionUi || f.sessionDate,
+      }));
 
       resetForm();
     } catch (e) {
@@ -333,18 +321,18 @@ export default function PdpResource() {
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      date: item.date || "", // DD.MM.YYYY
+      date: item.date || "",
       code: item.code || "",
       title: item.title || "",
       duration: item.duration || "",
       mode: item.mode || "Contact",
+      sessionDate: item.sessionDate || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function onDelete(id) {
     if (!confirm("Delete this programme?")) return;
-
     try {
       setErrMsg("");
       const res = await fetch(`${API}/${id}`, { method: "DELETE" });
@@ -367,11 +355,13 @@ export default function PdpResource() {
       const ui = (data || []).map((x) => ({
         id: x.id,
         date: isoToDdmmyyyy(x.displayDate),
+        sessionDate: isoToDdmmyyyy(x.displayDate),
         code: x.code || "—",
         title: x.programme || "—",
         duration: makeDurationDdMm(x.startDate, x.endDate),
         mode: x.mode || "—",
       }));
+
       setItems(ui);
     } catch (e) {
       console.error(e);
@@ -385,7 +375,7 @@ export default function PdpResource() {
     <div className="page">
       <header className="hero">
         <div className="hero-left">
-          <h1>Professional Development Programmes (PDP)</h1>
+          <h1>Professional Development Programmes (PDP) / As Resource person</h1>
           <p>5 Days Training Program</p>
         </div>
 
@@ -394,7 +384,7 @@ export default function PdpResource() {
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder='Search: "JAN 2025" / "31.12.2025" / code / title / mode...'
+            placeholder="Search: By year / code / title / mode..."
           />
           <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
             Refresh
@@ -427,10 +417,11 @@ export default function PdpResource() {
                 <div className="tr head">
                   <div>S.No</div>
                   <div>Code</div>
-                  <div>Programme</div>
+                  <div>Title</div>
                   <div>Duration</div>
                   <div>Mode</div>
-                  <div>Action</div>
+                  <div>Session Date</div>
+                  <div>Active</div>
                 </div>
 
                 {arr.map((it, idx) => (
@@ -443,9 +434,13 @@ export default function PdpResource() {
                       <span className={pillClass(it.mode)}>{it.mode}</span>
                     </div>
 
+                    <div className="muted">{it.sessionDate || it.date}</div>
+
+                    {/* ✅ SHOW EDIT/DELETE WHEN LOGGED IN (NOT CLIPPED AFTER CSS FIX) */}
                     <div className="actions">
-                      {isAdmin && (
+                      {isLoggedIn ? (
                         <>
+                          <span className="pill other">Active</span>
                           <button className="edit" onClick={() => onEdit(it)}>
                             Edit
                           </button>
@@ -453,6 +448,8 @@ export default function PdpResource() {
                             Delete
                           </button>
                         </>
+                      ) : (
+                        <span className="muted">—</span>
                       )}
                     </div>
                   </div>
@@ -473,7 +470,7 @@ export default function PdpResource() {
               <input
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                placeholder='31.12.2025  (or)  JAN 2025'
+                placeholder="31.12.2025  (or)  JAN 2025"
               />
             </label>
 
@@ -506,11 +503,23 @@ export default function PdpResource() {
 
             <label>
               Mode
-              <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })}>
+              <select
+                value={form.mode}
+                onChange={(e) => setForm({ ...form, mode: e.target.value })}
+              >
                 <option>Contact</option>
                 <option>Online</option>
                 <option>Physical</option>
               </select>
+            </label>
+
+            <label>
+              Session Date (DD.MM.YYYY or JAN 2025)
+              <input
+                value={form.sessionDate}
+                onChange={(e) => setForm({ ...form, sessionDate: e.target.value })}
+                placeholder="31.12.2025  (or)  JAN 2025"
+              />
             </label>
 
             <div className="btns">
@@ -523,7 +532,7 @@ export default function PdpResource() {
             </div>
 
             <div className="note">
-              Tip: Date / Code / Title are required. Duration must be DD.MM.YYYY - DD.MM.YYYY
+              Tip: Date / Code / Title / Session Date required. Duration must be DD.MM.YYYY - DD.MM.YYYY
             </div>
           </form>
         </div>

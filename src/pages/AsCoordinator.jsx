@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useContext } from "react";
 import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
-const STORAGE_KEY = "as_coordinator_items_v3";
+const API_BASE = "http://localhost:8080/api/coordinator-programmes";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
@@ -47,46 +47,91 @@ function pillClass(mode) {
   return "pill other";
 }
 
-function ensureCreatedAt(list) {
-  const now = Date.now();
-  return (list || []).map((it, i) => ({
-    ...it,
-    createdAt: typeof it.createdAt === "number" ? it.createdAt : now - i * 1000,
-  }));
+/* ---------- Date helpers (UI <-> DB) ---------- */
+
+function ddmmyyyyToIso(ddmmyyyy) {
+  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
+  if (!m) return null;
+  const [, dd, mm, yyyy] = m;
+  return `${yyyy}-${mm}-${dd}`; // LocalDate expects YYYY-MM-DD
+}
+
+function isoToDDMMYYYY(iso) {
+  if (!iso) return "";
+  const s = String(iso);
+  // if backend returns "2025-12-31T00:00:00" or similar, take first 10 chars
+  const pure = s.length >= 10 ? s.slice(0, 10) : s;
+  const [yyyy, mm, dd] = pure.split("-");
+  if (!yyyy || !mm || !dd) return "";
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+function parseDuration(duration) {
+  // Expected: "08.12.2025 - 12.12.2025"
+  const parts = (duration || "").split("-").map((s) => s.trim());
+  return { startDD: parts[0] || "", endDD: parts[1] || "" };
 }
 
 export default function AsCoordinator() {
   const { isAdmin } = useContext(AuthContext);
 
   const [q, setQ] = useState("");
-
-  // ✅ START EMPTY (NO RAW DATA)
-  const [items, setItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return ensureCreatedAt(JSON.parse(saved));
-    } catch {}
-    return ensureCreatedAt([]); // ✅ empty list initially
-  });
+  const [items, setItems] = useState([]); // ✅ DB is the source now
+  const [loading, setLoading] = useState(true);
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
-    date: "", // DD.MM.YYYY input
+    date: "", // DD.MM.YYYY
     code: "",
     title: "",
-    duration: "",
+    duration: "", // "DD.MM.YYYY - DD.MM.YYYY"
     mode: "Contact",
   });
 
+  /* ✅ Load from DB on page load */
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(API_BASE);
+        if (!res.ok) throw new Error("Failed to load coordinator programmes");
+        const data = await res.json();
+
+        const mapped = (data || []).map((row) => {
+          const rawDate = isoToDDMMYYYY(row.displayDate);
+          const start = isoToDDMMYYYY(row.startDate);
+          const end = isoToDDMMYYYY(row.endDate);
+
+          return {
+            id: row.id,
+            createdAt: row.id ? Number(row.id) : Date.now(), // just for stable ordering
+            rawDate,
+            date: monthYearFromDDMMYYYY(rawDate),
+            code: row.code || "",
+            title: row.programme || "",
+            duration: `${start} - ${end}`.trim(),
+            mode: row.mode || "Contact",
+          };
+        });
+
+        // latest first (optional)
+        mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
+        setItems(mapped);
+      } catch (e) {
+        console.error(e);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
 
   const filteredItems = useMemo(() => {
     const query = normalize(q);
     if (!query) return items;
 
-    // ✅ Search by: "DEC 2024", "2024", "DEC", also "30.12.2024"
     return items.filter((it) =>
       normalize(
         `${it.date} ${it.rawDate || ""} ${it.code} ${it.title} ${it.duration} ${it.mode}`
@@ -97,7 +142,7 @@ export default function AsCoordinator() {
   const grouped = useMemo(() => {
     const map = new Map();
     for (const it of filteredItems) {
-      const key = it.date || "—"; // ✅ month-year
+      const key = it.date || "—"; // month-year
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(it);
     }
@@ -105,10 +150,10 @@ export default function AsCoordinator() {
     const entries = Array.from(map.entries());
 
     for (const [, arr] of entries) {
-      arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      // sort inside group: newest first
+      arr.sort((a, b) => (b.id || 0) - (a.id || 0));
     }
 
-    // ✅ sort by month-year
     entries.sort((a, b) => monthYearKey(b[0]) - monthYearKey(a[0]));
     return entries;
   }, [filteredItems]);
@@ -118,59 +163,85 @@ export default function AsCoordinator() {
     setForm({ date: "", code: "", title: "", duration: "", mode: "Contact" });
   }
 
-  function onSubmit(e) {
+  /* ✅ ADD or UPDATE to DB */
+  async function onSubmit(e) {
     e.preventDefault();
 
-    const payload = {
-      date: form.date.trim(), // DD.MM.YYYY from input
-      code: form.code.trim(),
-      title: form.title.trim(),
-      duration: form.duration.trim(),
-      mode: form.mode,
-    };
+    const dateDD = form.date.trim();
+    const code = form.code.trim();
+    const title = form.title.trim();
+    const duration = form.duration.trim();
+    const mode = form.mode;
 
-    if (!payload.date || !payload.code || !payload.title) {
+    if (!dateDD || !code || !title) {
       alert("Please fill Date, Code, and Programme.");
       return;
     }
 
-    const rawDate = payload.date;
-    const monthYear = monthYearFromDDMMYYYY(rawDate);
+    const { startDD, endDD } = parseDuration(duration);
 
-    if (editingId) {
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === editingId
-            ? {
-                ...it,
-                ...payload,
-                date: monthYear, // ✅ stored as month-year
-                rawDate, // ✅ store original date
-                createdAt: it.createdAt || Date.now(),
-              }
-            : it
-        )
-      );
-    } else {
-      setItems((prev) => [
-        {
-          id: crypto.randomUUID(),
-          createdAt: Date.now(),
-          ...payload,
-          date: monthYear,
-          rawDate,
-        },
-        ...prev,
-      ]);
+    const payload = {
+      displayDate: ddmmyyyyToIso(dateDD),
+      code,
+      programme: title,
+      startDate: ddmmyyyyToIso(startDD),
+      endDate: ddmmyyyyToIso(endDD),
+      mode,
+    };
+
+    if (!payload.displayDate || !payload.startDate || !payload.endDate) {
+      alert("Please enter Date and Duration in DD.MM.YYYY format.");
+      return;
     }
 
-    resetForm();
+    try {
+      let res;
+      if (editingId) {
+        // UPDATE
+        res = await fetch(`${API_BASE}/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // ADD
+        res = await fetch(API_BASE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      if (!res.ok) throw new Error("Save failed");
+      const saved = await res.json();
+
+      const uiItem = {
+        id: saved.id,
+        createdAt: saved.id ? Number(saved.id) : Date.now(),
+        rawDate: dateDD,
+        date: monthYearFromDDMMYYYY(dateDD),
+        code,
+        title,
+        duration,
+        mode,
+      };
+
+      if (editingId) {
+        setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
+      } else {
+        setItems((prev) => [uiItem, ...prev]);
+      }
+
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      alert("Save failed. Check backend running + endpoint.");
+    }
   }
 
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      // ✅ show DD.MM.YYYY in input while editing
       date: item.rawDate || "",
       code: item.code || "",
       title: item.title || "",
@@ -180,15 +251,23 @@ export default function AsCoordinator() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function onDelete(id) {
+  /* ✅ DELETE from DB */
+  async function onDelete(id) {
     if (!confirm("Delete this programme?")) return;
-    setItems((prev) => prev.filter((it) => it.id !== id));
+
+    try {
+      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      setItems((prev) => prev.filter((it) => it.id !== id));
+    } catch (e) {
+      console.error(e);
+      alert("Delete failed. Check backend.");
+    }
   }
 
-  // ✅ reset = clear all items (since no raw data now)
+  /* ✅ Clear view (DB will still have data) */
   function resetAll() {
-    if (!confirm("Clear all programmes?")) return;
-    setItems([]);
+    // This only clears UI search + form. It does NOT delete DB.
     setQ("");
     resetForm();
   }
@@ -209,7 +288,7 @@ export default function AsCoordinator() {
             placeholder="Search: month / year / code / programme / mode..."
           />
           {isAdmin && (
-            <button className="ghost" onClick={resetAll} title="Clear all">
+            <button className="ghost" onClick={resetAll} title="Clear search/form">
               Reset
             </button>
           )}
@@ -217,7 +296,9 @@ export default function AsCoordinator() {
       </header>
 
       <div className="content">
-        {grouped.length === 0 ? (
+        {loading ? (
+          <div className="empty">Loading from database...</div>
+        ) : grouped.length === 0 ? (
           <div className="empty">No results found.</div>
         ) : (
           grouped.map(([date, arr]) => (
@@ -337,7 +418,7 @@ export default function AsCoordinator() {
       )}
 
       <footer className="footer">
-        Saved locally in browser (localStorage). Later we can connect DB.
+        Now using database (MySQL) via Spring Boot API.
       </footer>
     </div>
   );

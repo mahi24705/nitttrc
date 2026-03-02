@@ -175,7 +175,7 @@ button{
   border-radius: 999px;
 }
 
-/* ✅ Make table scroll horizontally when needed (single line always) */
+/* ✅ Make table scroll horizontally when needed */
 .table{
   width:100%;
   overflow-x: auto;
@@ -206,20 +206,27 @@ button{
   letter-spacing:.4px;
 }
 
-/* ✅ Keep all columns in one line except title */
+/* ✅ Keep all columns in one line by default */
 .table .tr > div{
   white-space: nowrap;
 }
 
+/* ✅ ONLY TITLE should wrap (fix cut title issue) */
+.table .tr > .programme{
+  white-space: normal !important;
+  overflow: visible;
+  text-overflow: unset;
+
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+/* Base title style */
 .programme{
   font-weight: 700;
   font-size: 15px;
-  line-height: 1.35;
   color: #0b1b34;
-  word-break: break-word;
-
-  /* ✅ only title wraps */
-  white-space: normal;
 }
 
 .table .tr:not(.head):hover{ background: #fbfdff; }
@@ -296,9 +303,4 @@ button{
 /* ✅ Responsive: keep SAME 7 columns, just allow scroll (do NOT stack) */
 @media (max-width: 980px){
   .panel{ position: static; }
-
-  /* ❌ remove old stacking rules:
-     .table .tr{ grid-template-columns: 1fr; }
-     .table .tr.head{ display:none; }
-  */
 }

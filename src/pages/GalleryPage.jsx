@@ -6,65 +6,101 @@ function GalleryPage() {
   const { user } = useContext(AuthContext);
 
   const [images, setImages] = useState([]);
+  const [title, setTitle] = useState("");
+  const [search, setSearch] = useState("");
 
-  // ✅ Load images
+  // 🔄 Load from localStorage
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("galleryData")) || [];
     setImages(saved);
   }, []);
 
-  // ✅ Save images
+  // 💾 Save to localStorage
   useEffect(() => {
     localStorage.setItem("galleryData", JSON.stringify(images));
   }, [images]);
 
-  // ✅ Handle Image Upload
+  // 📤 Upload Image (Admin Only)
   const handleUpload = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || !title.trim()) return alert("Add title and image");
 
     const reader = new FileReader();
 
     reader.onloadend = () => {
-      setImages([reader.result, ...images]); // latest first
+      const newImage = {
+        id: Date.now(),
+        url: reader.result,
+        title: title.trim(),
+      };
+
+      setImages([newImage, ...images]);
+      setTitle("");
+      e.target.value = null;
     };
 
     reader.readAsDataURL(file);
   };
 
-  // ✅ Delete Image
-  const handleDelete = (index) => {
-    const updated = images.filter((_, i) => i !== index);
+  // ❌ Delete Image
+  const handleDelete = (id) => {
+    const updated = images.filter((img) => img.id !== id);
     setImages(updated);
   };
 
+  // 🔎 Search filter
+  const filteredImages = images.filter((img) =>
+    img.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="gallery-container">
-      <h2 className="gallery-title">Gallery</h2>
+      <h1 className="gallery-heading">✨ 3D Gallery CRUD</h1>
 
-      {/* ✅ IMAGE GRID */}
-      <div className="gallery-grid">
-        {images.length === 0 && <p>No images added</p>}
+      {/* 🔍 Search */}
+      <input
+        className="search-input"
+        type="text"
+        placeholder="🔎 Search by title..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-        {images.map((img, index) => (
-          <div className="gallery-card" key={index}>
-            <img src={img} alt="gallery" />
-
-            {user?.role === "admin" && (
-              <button onClick={() => handleDelete(index)}>
-                Delete
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* ✅ ADMIN UPLOAD */}
+      {/* 👑 Admin Upload */}
       {user?.role === "admin" && (
         <div className="admin-box">
+          <input
+            type="text"
+            placeholder="Image title..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
           <input type="file" accept="image/*" onChange={handleUpload} />
         </div>
       )}
+
+      {/* 🖼️ Image Grid */}
+      <div className="gallery-grid">
+        {filteredImages.length === 0 && (
+          <p className="empty">Gallery is empty 📷</p>
+        )}
+
+        {filteredImages.map((img) => (
+          <div className="gallery-card" key={img.id}>
+            <img src={img.url} alt={img.title} />
+            <div className="card-footer">
+              <span>{img.title}</span>
+
+              {user?.role === "admin" && (
+                <button onClick={() => handleDelete(img.id)}>
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

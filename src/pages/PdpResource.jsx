@@ -2,25 +2,7 @@ import { useEffect, useMemo, useState, useContext } from "react";
 import "./PdpResource.css";
 import { AuthContext } from "../context/AuthContext";
 
-const API = "http://localhost:8080/api/pdp";
-
-/* 🔹 RAW TEXT DATA (optional for initial import) */
-const RAW_TEXT = `
-31.01.2026 In the PDP - Research Paper Writing made Simple: A Technology Supported Framework (05.01.2026 -09.01.2026) served as resource person (Contact mode)
-31.12.2025 In the PDP - CS-40-297 Agentic AI for problem solving in real world applications (08.12.2025 – 12.12.2025) served as resource person (Physical mode)
-31.12.2025 In the PDP CS-41-316 Data Science and research Analytics using R Programming (15.12.2025 to 19.12.2025) served as resource person (Contact mode)
-31.12.2025 In the PDP ME-33-316 Current trends and future directions in Unmanned Aerial Vehicles (15.12.2025 to 19.12.2025) served as resource person (Contact mode)
-29.09.2025 In the PDP EM-24-239 Effective Research Proposal Writing (08.09.2025 to 12.09.2025) served as resource person (Contact Mode)
-29.09.2025 In the PDP CD-29-219 Application of Generative AI for Question Paper Setting Integrating with Bloom’s Taxonomy Levels (BTL) (22.09.2025 to 26.09.2025) served as resource person (Contact Mode)
-29.09.2025 In the ITEC Leveraging Drone Technology for Achieving Sustainable Development Goals (SDGs) and Promoting Entrepreneurship (17.09.2025 to 30.09.2025) served as resource person (Contact Mode)
-30.08.2025 In the PDP EC-10-158 Networking and Data Communication (04.08.2025 to 08.08.2025) served as resource person (Online mode)
-30.08.2025 In the PDP CD-19-153 Developing a Curriculum Framework Aligned with NEP 2020, OBE, and AI (04.08.2025 to 08.08.2025) served as resource person (Online mode)
-30.08.2025 In the PDP Advanced Pedagogical Strategies for Impactful STEM Learning in AI, ML, and DS Courses (04.08.2025 to 08.08.2025) served as resource person (Online mode)
-30.08.2025 In the PDP Smart UAV Systems: Leveraging IoT and Image Processing (18.08.2025 to 22.08.2025) served as resource person (Online mode)
-29.07.2025 In the PDP CS-13-101 Empowering Text intelligence through Natural Language Processing (07.07.2025 to 11.07.2025) served as resource person (Contact mode)
-29.07.2025 In the PDP EM-15-22 Tech Driven Research paper writing – A step by step approach with Digital Tools (14.07.2025 to 18.07.2025) served as resource person (Contact mode)
-28.03.2025 PDP EC-12-312 Wireless Communication
-`;
+const API = "http://10.22.39.232:8080/api/pdp";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
@@ -81,6 +63,58 @@ function isoToDdmmyyyy(iso) {
   return `${dd}.${mm}.${yy}`;
 }
 
+/** ✅ Validate a real calendar date (rejects 31.02.2004 etc.) */
+function isValidIsoDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
+  if (!m) return false;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === mo - 1 &&
+    dt.getUTCDate() === d
+  );
+}
+
+/** ✅ Accepts BOTH:
+ *  - "31.12.2025"
+ *  - "JAN 2025"
+ * Returns:
+ *  - displayDateIso (YYYY-MM-DD)
+ *  - uiDate (DD.MM.YYYY)  (for showing in table/input after save)
+ */
+function parseDateInputToIsoAndUi(dateInput) {
+  const s = (dateInput || "").trim().toUpperCase();
+
+  // DD.MM.YYYY
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
+    const iso = ddmmyyyyToIso(s);
+    if (!iso || !isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
+    return { displayDateIso: iso, uiDate: s };
+  }
+
+  // "JAN 2025"
+  const monYear = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
+    s
+  );
+  if (monYear) {
+    const monMap = {
+      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+    };
+    const mm = monMap[monYear[1]];
+    const yyyy = monYear[2];
+    const iso = `${yyyy}-${mm}-01`;     // store first day of that month
+    const ui = `01.${mm}.${yyyy}`;      // show as DD.MM.YYYY in UI
+    if (!isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
+    return { displayDateIso: iso, uiDate: ui };
+  }
+
+  return { displayDateIso: "", uiDate: "" };
+}
+
 /** Parse duration input like:
  *  "05.01.2026 - 09.01.2026"
  *  "05.01.2026 – 09.01.2026"
@@ -94,7 +128,6 @@ function parseDurationToIsoRange(duration) {
 
   if (!s) return { startIso: "", endIso: "" };
 
-  // support "to"
   const parts = s.includes(" to ")
     ? s.split(" to ")
     : s.split("-").map((x) => x.trim());
@@ -102,67 +135,18 @@ function parseDurationToIsoRange(duration) {
   const start = (parts[0] || "").trim();
   const end = (parts[1] || "").trim();
 
+  const startIso = ddmmyyyyToIso(start);
+  const endIso = ddmmyyyyToIso(end);
+
   return {
-    startIso: ddmmyyyyToIso(start),
-    endIso: ddmmyyyyToIso(end),
+    startIso,
+    endIso,
   };
 }
 
 function makeDurationDdMm(startIso, endIso) {
   if (!startIso || !endIso) return "—";
   return `${isoToDdmmyyyy(startIso)} - ${isoToDdmmyyyy(endIso)}`;
-}
-
-// 🔹 Convert text -> items (for optional import)
-function parseRawToItems(raw) {
-  const lines = raw
-    .split("\n")
-    .map((x) => x.trim())
-    .filter(Boolean);
-
-  return lines.map((line) => {
-    const dateMatch = line.match(/^\d{2}\.\d{2}\.\d{4}/);
-    const durationMatch = line.match(/\((.*?)\)/);
-    const modeMatch = line.match(/\((Contact|Online|Physical)\s*mode\)/i);
-    const codeMatch = line.match(/([A-Z]{2,}-?\d+-?\d*)/);
-
-    const rawDate = dateMatch ? dateMatch[0] : "—";
-    const date = monthYearFromDDMMYYYY(rawDate); // ✅ group label = MONTH YEAR
-
-    const duration = durationMatch
-      ? durationMatch[1].replace(/[–—]/g, "-").replace(/\s+/g, " ").trim()
-      : "—";
-    const mode = modeMatch
-      ? modeMatch[1][0].toUpperCase() + modeMatch[1].slice(1).toLowerCase()
-      : "—";
-    const code = codeMatch ? codeMatch[1] : "PDP";
-
-    const title = line
-      .replace(rawDate, "")
-      .replace(code, "")
-      .replace(/\(.*?\)/g, "")
-      .replace(/served as resource person.*$/i, "")
-      .replace(/In the PDP\s*-?/gi, "")
-      .replace(/In the ITEC\s*-?/gi, "")
-      .replace(/\bPDP\b/gi, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    return {
-<<<<<<< HEAD
-      id: crypto.randomUUID(),
-      date,        // ✅ now like "DEC 2025"
-      rawDate,     // ✅ keep original for searching if needed
-=======
-      // UI fields (DD.MM.YYYY, duration string)
-      date,
->>>>>>> 3aec7ea59936cbdfe079ff32d2cdb3041879a015
-      code,
-      title: title || "—",
-      duration: duration || "—",
-      mode: mode || "—",
-    };
-  });
 }
 
 export default function PdpResource() {
@@ -196,15 +180,11 @@ export default function PdpResource() {
         // Convert DB → UI fields
         const ui = (data || []).map((x) => ({
           id: x.id,
-          date: isoToDdmmyyyy(x.displayDate),
+          date: isoToDdmmyyyy(x.displayDate), // UI shows DD.MM.YYYY
           code: x.code || "—",
           title: x.programme || "—",
           duration: makeDurationDdMm(x.startDate, x.endDate),
           mode: x.mode || "—",
-          // keep originals if needed
-          _displayDateIso: x.displayDate,
-          _startIso: x.startDate,
-          _endIso: x.endDate,
         }));
 
         setItems(ui);
@@ -223,48 +203,32 @@ export default function PdpResource() {
     const query = normalize(q);
     if (!query) return items;
 
-    // ✅ Search will match: "DEC 2025", "2025", "DEC", also old "31.12.2025"
     return items.filter((it) =>
-<<<<<<< HEAD
       normalize(
-        `${it.date} ${it.rawDate || ""} ${it.code} ${it.title} ${it.duration} ${it.mode}`
+        `${it.date} ${monthYearFromDDMMYYYY(it.date)} ${it.code} ${it.title} ${it.duration} ${it.mode}`
       ).includes(query)
     );
   }, [items, q]);
 
-  // ✅ GROUP + SORT: month-year groups newest first, inside group newest createdAt first
-=======
-      normalize(`${it.date} ${it.code} ${it.title} ${it.duration} ${it.mode}`).includes(query)
-    );
-  }, [items, q]);
-
-  // ✅ GROUP + SORT: date groups newest first
->>>>>>> 3aec7ea59936cbdfe079ff32d2cdb3041879a015
+  // ✅ GROUP + SORT: month-year groups newest first
   const grouped = useMemo(() => {
     const map = new Map();
     for (const it of filteredItems) {
-      const key = it.date || "—"; // ✅ month-year group
+      const key = monthYearFromDDMMYYYY(it.date) || "—"; // group label: "DEC 2025"
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(it);
     }
 
     const entries = Array.from(map.entries());
 
-<<<<<<< HEAD
-=======
-    // sort items inside date group by id desc (latest first) (simple)
->>>>>>> 3aec7ea59936cbdfe079ff32d2cdb3041879a015
+    // sort items inside group by id desc (latest first)
     for (const [, arr] of entries) {
       arr.sort((a, b) => (b.id || 0) - (a.id || 0));
     }
 
-<<<<<<< HEAD
+    // sort month-year groups newest first
     entries.sort((a, b) => monthYearKey(b[0]) - monthYearKey(a[0]));
-=======
-    // sort date groups newest date first
-    entries.sort((a, b) => dateKey(b[0]) - dateKey(a[0]));
 
->>>>>>> 3aec7ea59936cbdfe079ff32d2cdb3041879a015
     return entries;
   }, [filteredItems]);
 
@@ -289,48 +253,17 @@ export default function PdpResource() {
       return;
     }
 
-<<<<<<< HEAD
-    // ✅ IMPORTANT: Admin enters date as DD.MM.YYYY in form.
-    // Convert it to month-year for grouping, but keep rawDate too.
-    const rawDate = payload.date;
-    const monthYear = monthYearFromDDMMYYYY(rawDate);
-
-    if (editingId) {
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === editingId
-            ? {
-                ...it,
-                ...payload,
-                date: monthYear,
-                rawDate,
-                createdAt: it.createdAt || Date.now(),
-              }
-            : it
-        )
-      );
-    } else {
-      setItems((prev) => [
-        {
-          id: crypto.randomUUID(),
-          createdAt: Date.now(),
-          ...payload,
-          date: monthYear,
-          rawDate,
-        },
-        ...prev,
-      ]);
-=======
-    const displayDateIso = ddmmyyyyToIso(payloadUI.date);
+    const { displayDateIso, uiDate } = parseDateInputToIsoAndUi(payloadUI.date);
     if (!displayDateIso) {
-      alert("Date format must be DD.MM.YYYY (example: 31.12.2025)");
+      alert('Date must be "DD.MM.YYYY" (example: 31.12.2025) OR "JAN 2025". Also invalid dates like 31.02.2004 are not allowed.');
       return;
->>>>>>> 3aec7ea59936cbdfe079ff32d2cdb3041879a015
     }
 
     const { startIso, endIso } = parseDurationToIsoRange(payloadUI.duration);
-    if (!startIso || !endIso) {
-      alert("Duration must contain start and end date in DD.MM.YYYY format.\nExample: 05.01.2026 - 09.01.2026");
+    if (!startIso || !endIso || !isValidIsoDate(startIso) || !isValidIsoDate(endIso)) {
+      alert(
+        "Duration must contain start and end date in DD.MM.YYYY format.\nExample: 05.01.2026 - 09.01.2026"
+      );
       return;
     }
 
@@ -356,7 +289,6 @@ export default function PdpResource() {
         if (!res.ok) throw new Error(`PUT failed: ${res.status}`);
         const saved = await res.json();
 
-        // Update UI list
         const updated = {
           id: saved.id,
           date: isoToDdmmyyyy(saved.displayDate),
@@ -388,6 +320,9 @@ export default function PdpResource() {
         setItems((prev) => [created, ...prev]);
       }
 
+      // keep input normalized after save (JAN 2025 becomes 01.MM.YYYY)
+      setForm((f) => ({ ...f, date: uiDate || f.date }));
+
       resetForm();
     } catch (e) {
       console.error(e);
@@ -398,8 +333,7 @@ export default function PdpResource() {
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      // ✅ Show original DD.MM.YYYY in input
-      date: item.rawDate || "",
+      date: item.date || "", // DD.MM.YYYY
       code: item.code || "",
       title: item.title || "",
       duration: item.duration || "",
@@ -419,61 +353,6 @@ export default function PdpResource() {
     } catch (e) {
       console.error(e);
       setErrMsg("Delete failed. Check backend logs / CORS.");
-    }
-  }
-
-  // Optional: import RAW_TEXT into DB (one click)
-  async function importInitialToDb() {
-    if (!confirm("Import RAW_TEXT items into DB? (This will add many rows)")) return;
-
-    const list = parseRawToItems(RAW_TEXT);
-
-    // Convert to backend payload list
-    const payloads = list
-      .map((it) => {
-        const displayDate = ddmmyyyyToIso(it.date);
-        const { startIso, endIso } = parseDurationToIsoRange(it.duration);
-        if (!displayDate || !startIso || !endIso) return null;
-
-        return {
-          displayDate,
-          code: it.code,
-          programme: it.title,
-          startDate: startIso,
-          endDate: endIso,
-          mode: it.mode,
-        };
-      })
-      .filter(Boolean);
-
-    try {
-      setErrMsg("");
-      // Insert one by one (simple)
-      for (const p of payloads) {
-        const res = await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(p),
-        });
-        if (!res.ok) throw new Error(`Import POST failed: ${res.status}`);
-      }
-
-      // Reload after import
-      const res2 = await fetch(API);
-      const data = await res2.json();
-      const ui = (data || []).map((x) => ({
-        id: x.id,
-        date: isoToDdmmyyyy(x.displayDate),
-        code: x.code || "—",
-        title: x.programme || "—",
-        duration: makeDurationDdMm(x.startDate, x.endDate),
-        mode: x.mode || "—",
-      }));
-      setItems(ui);
-      alert("Import completed ✅");
-    } catch (e) {
-      console.error(e);
-      setErrMsg("Import failed. Check backend logs / CORS / date formats.");
     }
   }
 
@@ -515,21 +394,19 @@ export default function PdpResource() {
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search: month / year / code / title / mode..."
+            placeholder='Search: "JAN 2025" / "31.12.2025" / code / title / mode...'
           />
           <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
             Refresh
           </button>
-
-          {isAdmin && (
-            <button className="ghost" onClick={importInitialToDb} title="Import RAW_TEXT to DB">
-              Import
-            </button>
-          )}
         </div>
       </header>
 
-      {errMsg && <div className="empty" style={{ marginBottom: 12 }}>{errMsg}</div>}
+      {errMsg && (
+        <div className="empty" style={{ marginBottom: 12 }}>
+          {errMsg}
+        </div>
+      )}
 
       <div className="content">
         {loading ? (
@@ -592,11 +469,11 @@ export default function PdpResource() {
 
           <form onSubmit={onSubmit} className="form">
             <label>
-              Date (DD.MM.YYYY)
+              Date (DD.MM.YYYY or JAN 2025)
               <input
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                placeholder="31.12.2025"
+                placeholder='31.12.2025  (or)  JAN 2025'
               />
             </label>
 
@@ -629,10 +506,7 @@ export default function PdpResource() {
 
             <label>
               Mode
-              <select
-                value={form.mode}
-                onChange={(e) => setForm({ ...form, mode: e.target.value })}
-              >
+              <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })}>
                 <option>Contact</option>
                 <option>Online</option>
                 <option>Physical</option>
@@ -648,7 +522,9 @@ export default function PdpResource() {
               </button>
             </div>
 
-            <div className="note">Tip: Date / Code / Title are required. Duration must be DD.MM.YYYY - DD.MM.YYYY</div>
+            <div className="note">
+              Tip: Date / Code / Title are required. Duration must be DD.MM.YYYY - DD.MM.YYYY
+            </div>
           </form>
         </div>
       )}

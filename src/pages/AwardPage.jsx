@@ -1,91 +1,144 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { motion } from "framer-motion";
 import "./AwardPage.css";
 
 function AwardPage() {
   const { user } = useContext(AuthContext);
 
-  const subHeadings = ["Student Award", "Faculty Award"];
+  const categories = ["Student Awards", "Faculty Awards"];
 
   const initialData = () => {
     const saved = JSON.parse(localStorage.getItem("awardData")) || {};
     const initialized = {};
-    subHeadings.forEach((sub) => {
-      initialized[sub] = saved[sub] || [];
+    categories.forEach((cat) => {
+      initialized[cat] = saved[cat] || [];
     });
     return initialized;
   };
 
   const [data, setData] = useState(initialData);
   const [input, setInput] = useState({});
+  const [year, setYear] = useState({});
+  const [editing, setEditing] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("awardData", JSON.stringify(data));
   }, [data]);
 
-  const handleAdd = (sub) => {
-    if (!input[sub]?.trim()) return;
+  // ➕ Add Award
+  const handleAdd = (cat) => {
+    if (!input[cat]?.trim() || !year[cat]) return;
+
+    const newAward = {
+      text: input[cat],
+      year: year[cat],
+    };
 
     setData({
       ...data,
-      [sub]: [input[sub], ...data[sub]]
+      [cat]: [newAward, ...data[cat]],
     });
 
-    setInput({ ...input, [sub]: "" });
+    setInput({ ...input, [cat]: "" });
+    setYear({ ...year, [cat]: "" });
   };
 
-  const handleDelete = (sub, idx) => {
-    const updatedList = data[sub].filter((_, i) => i !== idx);
-    setData({ ...data, [sub]: updatedList });
+  // ❌ Delete
+  const handleDelete = (cat, idx) => {
+    const updated = data[cat].filter((_, i) => i !== idx);
+    setData({ ...data, [cat]: updated });
+  };
+
+  // ✏ Edit
+  const handleEdit = (cat, idx) => {
+    const item = data[cat][idx];
+    setInput({ ...input, [cat]: item.text });
+    setYear({ ...year, [cat]: item.year });
+    setEditing({ cat, idx });
+  };
+
+  const handleUpdate = (cat) => {
+    const updated = [...data[cat]];
+    updated[editing.idx] = {
+      text: input[cat],
+      year: year[cat],
+    };
+
+    setData({ ...data, [cat]: updated });
+    setEditing(null);
+    setInput({ ...input, [cat]: "" });
+    setYear({ ...year, [cat]: "" });
   };
 
   return (
     <div className="award-container">
-      <h2 className="award-title">Awards & Recognition</h2>
+      <h2 className="award-title">🏆 Awards & Recognition</h2>
 
       <div className="award-flex">
+        {categories.map((cat) => (
+          <motion.div
+            key={cat}
+            className="award-column"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h3>{cat}</h3>
 
-        {subHeadings.map((sub) => (
-          <div key={sub} className="award-column">
-            <h3>{sub}</h3>
-
-            {/* ✅ POINT STYLE LIST */}
             <ul className="award-list">
-              {data[sub].length === 0 && <li>No content yet</li>}
+              {data[cat].length === 0 && <li>No content yet</li>}
 
-              {data[sub].map((item, idx) => (
-                <li key={idx}>
-                  <span>{item}</span>
+              {data[cat].map((item, idx) => (
+                <motion.li
+                  key={idx}
+                  whileHover={{ scale: 1.03 }}
+                  className="award-item"
+                >
+                  <div className="award-text">
+                    🎖 <span>{item.text}</span>
+                    <span className="award-year">{item.year}</span>
+                  </div>
 
                   {user?.role === "admin" && (
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(sub, idx)}
-                    >
-                      ✖
-                    </button>
+                    <div className="action-buttons">
+                      <button onClick={() => handleEdit(cat, idx)}>✏</button>
+                      <button onClick={() => handleDelete(cat, idx)}>✖</button>
+                    </div>
                   )}
-                </li>
+                </motion.li>
               ))}
             </ul>
 
-            {/* ✅ ADMIN INPUT */}
             {user?.role === "admin" && (
               <div className="admin-box">
                 <input
                   type="text"
-                  placeholder={`Add ${sub}`}
-                  value={input[sub] || ""}
+                  placeholder={`Award title`}
+                  value={input[cat] || ""}
                   onChange={(e) =>
-                    setInput({ ...input, [sub]: e.target.value })
+                    setInput({ ...input, [cat]: e.target.value })
                   }
                 />
-                <button onClick={() => handleAdd(sub)}>Add</button>
+
+                <input
+                  type="number"
+                  placeholder="Year"
+                  value={year[cat] || ""}
+                  onChange={(e) =>
+                    setYear({ ...year, [cat]: e.target.value })
+                  }
+                />
+
+                {editing?.cat === cat ? (
+                  <button onClick={() => handleUpdate(cat)}>Update</button>
+                ) : (
+                  <button onClick={() => handleAdd(cat)}>Add</button>
+                )}
               </div>
             )}
-          </div>
+          </motion.div>
         ))}
-
       </div>
     </div>
   );

@@ -4,20 +4,6 @@ import { AuthContext } from "../context/AuthContext";
 
 const STORAGE_KEY = "as_coordinator_items_v3";
 
-/* 🔹 RAW TEXT DATA (AS COORDINATOR)
-   Format: date | code | programme | duration | mode
-*/
-const RAW_TEXT = `
-30.12.2024 | — | Training Technical Teachers | — | Contact
-30.01.2025 | — | Training Technical Teachers | — | Contact
-28.03.2025 | — | Training Technical Teachers | — | Contact
-30.08.2025 | PDP EC-12-177 | Underwater sensors and its applications | — | Online
-29.09.2025 | PDP EC-02-11 | Imaging Sensors: Data Interpretation using DL and ML | — | Contact
-29.10.2025 | EC-17-246 | Enabling Modern Communication through Radar and satellite | — | Contact
-22.11.2025 | EC-20-281 | Hands on training: Drafting and review insights on Technical Proposals for funding | — | Contact
-31.12.2025 | SP-20 | Quality 3P (paper, patent and Projects) for an academician from engineering Perspective | — | Contact
-`;
-
 function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
@@ -61,41 +47,6 @@ function pillClass(mode) {
   return "pill other";
 }
 
-// 🔹 Convert raw lines -> items
-function parseRawToItems(raw) {
-  const lines = raw
-    .split("\n")
-    .map((x) => x.trim())
-    .filter(Boolean);
-
-  const base = Date.now() - lines.length * 1000;
-
-  return lines.map((line, idx) => {
-    const parts = line.split("|").map((p) => p.trim());
-
-    const rawDate = parts[0] || "—";
-    const date = monthYearFromDDMMYYYY(rawDate); // ✅ group label month-year
-
-    const code = parts[1] || "—";
-    const title = parts[2] || "—";
-    const duration = parts[3] || "—";
-    const mode = parts[4] || "—";
-
-    return {
-      id: crypto.randomUUID(),
-      date,     // ✅ "DEC 2024"
-      rawDate,  // ✅ keep "30.12.2024" for search + edit input
-      code,
-      title,
-      duration,
-      mode,
-      createdAt: base + idx * 1000,
-    };
-  });
-}
-
-const INITIAL_ITEMS = parseRawToItems(RAW_TEXT);
-
 function ensureCreatedAt(list) {
   const now = Date.now();
   return (list || []).map((it, i) => ({
@@ -109,12 +60,13 @@ export default function AsCoordinator() {
 
   const [q, setQ] = useState("");
 
+  // ✅ START EMPTY (NO RAW DATA)
   const [items, setItems] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) return ensureCreatedAt(JSON.parse(saved));
     } catch {}
-    return ensureCreatedAt(INITIAL_ITEMS);
+    return ensureCreatedAt([]); // ✅ empty list initially
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -193,7 +145,7 @@ export default function AsCoordinator() {
                 ...it,
                 ...payload,
                 date: monthYear, // ✅ stored as month-year
-                rawDate,         // ✅ store original date
+                rawDate, // ✅ store original date
                 createdAt: it.createdAt || Date.now(),
               }
             : it
@@ -233,9 +185,10 @@ export default function AsCoordinator() {
     setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
+  // ✅ reset = clear all items (since no raw data now)
   function resetAll() {
-    if (!confirm("Reset to initial data?")) return;
-    setItems(ensureCreatedAt(INITIAL_ITEMS));
+    if (!confirm("Clear all programmes?")) return;
+    setItems([]);
     setQ("");
     resetForm();
   }
@@ -256,7 +209,7 @@ export default function AsCoordinator() {
             placeholder="Search: month / year / code / programme / mode..."
           />
           {isAdmin && (
-            <button className="ghost" onClick={resetAll} title="Reset">
+            <button className="ghost" onClick={resetAll} title="Clear all">
               Reset
             </button>
           )}
@@ -280,7 +233,7 @@ export default function AsCoordinator() {
                 <div className="tr head">
                   <div>S.No</div>
                   <div>Code</div>
-                  <div>Programme</div>
+                  <div>Title</div>
                   <div>Duration</div>
                   <div>Mode</div>
                   <div>Action</div>

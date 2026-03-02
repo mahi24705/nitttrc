@@ -1,18 +1,16 @@
-/* 🌊 Background Theme (Underwater feel) */
 .award-container {
-  padding: 40px;
+  padding: 60px 20px;
   min-height: 100vh;
-  background: linear-gradient(to bottom, #001f3f, #0077b6);
+  background: linear-gradient(135deg, #001f3f, #0077b6);
   color: white;
+  text-align: center;
 }
 
 .award-title {
-  text-align: center;
-  font-size: 32px;
-  margin-bottom: 30px;
+  font-size: 38px;
+  margin-bottom: 40px;
 }
 
-/* ✅ FLEX LAYOUT */
 .award-flex {
   display: flex;
   gap: 40px;
@@ -20,55 +18,77 @@
   flex-wrap: wrap;
 }
 
-/* ✅ COLUMN */
 .award-column {
-  width: 350px;
+  width: 400px;
   background: rgba(255, 255, 255, 0.08);
-  padding: 20px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
+  padding: 30px;
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .award-column h3 {
-  text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 10px;
 }
 
-/* ✅ POINT LIST STYLE */
 .award-list {
-  list-style-type: disc;
-  padding-left: 20px;
+  list-style: none;
+  padding: 0;
 }
 
-.award-list li {
-  margin: 10px 0;
+.award-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  transition: 0.3s;
 }
 
-/* ✅ DELETE BUTTON */
-.delete-btn {
+.award-text {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.award-year {
+  background: #00b4d8;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.action-buttons button {
+  margin-left: 5px;
   background: crimson;
   border: none;
   color: white;
   padding: 4px 8px;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-/* ✅ INPUT AREA */
+.action-buttons button:first-child {
+  background: #00b4d8;
+}
+
 .admin-box {
-  margin-top: 15px;
+  margin-top: 20px;
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .admin-box input {
-  flex: 1;
   padding: 6px;
-  border-radius: 5px;
+  border-radius: 6px;
   border: none;
+  flex: 1;
+  min-width: 120px;
 }
 
 .admin-box button {
@@ -76,6 +96,23 @@
   border: none;
   background: #00b4d8;
   color: white;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+}
+
+/* 📱 Mobile */
+@media (max-width: 768px) {
+  .award-column {
+    width: 100%;
+  }
+
+  .award-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .action-buttons {
+    align-self: flex-end;
+  }
 }

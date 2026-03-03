@@ -14,7 +14,6 @@ import GalleryPage from "./pages/GalleryPage";
 import OutsideWorld from "./pages/OutsideWorld";
 import NetworkIncharge from "./pages/NetworkIncharge";
 import AudioIncharge from "./pages/AudioIncharge";
-import Dc from "./pages/Dc";
 import InvitedTalks from "./pages/InvitedTalks";
 
 /* ✅ NEW IMPORTS */
@@ -69,7 +68,6 @@ function App() {
         <Route path="/outsideworld" element={<OutsideWorld />} />
         <Route path="/network" element={<NetworkIncharge />} />
         <Route path="/audioincharge" element={<AudioIncharge />} />
-        <Route path="/dc" element={<Dc />} />
       </Routes>
 
       <Footer />

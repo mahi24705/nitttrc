@@ -9,8 +9,6 @@ function Home() {
     { heading: "Award & Recognition", desc: "Achievements & Honors", route: "/award" },
     { heading: "Outside", desc: "Collaborations & International Work", route: "/outsideworld" },
     { heading: "Publication", desc: "Research Publications", route: "/publication" },
-    { heading: "Board of Studies", desc: "Research Publications", route: "/boardofstudies" },
-    { heading: "DC", desc: "Research Publications", route: "/dc" },
     { heading: "Gallery", desc: "Research Publications", route: "/gallery" }
   ];
 

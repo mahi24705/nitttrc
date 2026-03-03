@@ -63,7 +63,7 @@ function monthYearKey(monYear) {
 function pillClass(mode) {
   if (mode === "Contact") return "pill contact";
   if (mode === "Online") return "pill online";
-  if (mode === "Physical") return "pill physical";
+  if (mode === "Hybrid") return "pill Hybrid";
   return "pill other";
 }
 
@@ -493,7 +493,7 @@ export default function AsCoordinator() {
               >
                 <option>Contact</option>
                 <option>Online</option>
-                <option>Physical</option>
+                <option>Hybrid</option>
               </select>
             </label>
 

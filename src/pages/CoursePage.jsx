@@ -23,7 +23,7 @@ export default function CoursePage() {
               onClick={() => navigate("/course/pdp")}
             >
               <div className="nitt-card-title">PDP</div>
-              <div className="nitt-card-sub">PDP Programmes</div>
+              <div className="nitt-card-sub">Professional Development Programmes (PDP)</div>
             </button>
 
             {/* PG */}
@@ -32,7 +32,8 @@ export default function CoursePage() {
               onClick={() => navigate("/pg")}
             >
               <div className="nitt-card-title">PG</div>
-              <div className="nitt-card-sub">Post Graduate</div>
+              <div className="nitt-card-sub">M.Tech / VLSI / Embedded system
+</div>
             </button>
 
             {/* ITEC */}
@@ -52,6 +53,16 @@ export default function CoursePage() {
               <div className="nitt-card-title">Host Institution</div>
               <div className="nitt-card-sub">Host Institution Work</div>
             </button>
+            {/* ITP */}
+<button
+  className="nitt-card"
+  onClick={() => navigate("/itp")}
+>
+  <div className="nitt-card-title">ITP</div>
+  <div className="nitt-card-sub">
+    Industrial Training Program
+  </div>
+</button>
           </>
         ) : (
           <>

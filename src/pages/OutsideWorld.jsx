@@ -5,13 +5,12 @@ import "./OutsideWorld.css";
 function OutsideWorld() {
   const { user } = useContext(AuthContext);
 
-  const subHeadings = [
-    { title: "Invited Talks", subtitle: "Speeches & Sessions" },
-    { title: "Workshops", subtitle: "Training & Hands-on" },
-    { title: "International Collaboration", subtitle: "Collaborations & Work" },
-    { title: "Guest Lectures", subtitle: "Lectures & Interaction" },
-  ];
-
+ const subHeadings = [
+  { title: "Invited Talks", subtitle: "Speeches & Sessions" },
+  { title: "Workshops", subtitle: "Training & Hands-on" },
+  { title: "International Collaboration", subtitle: "Collaborations & Work" },
+  { title: "Guest Lectures", subtitle: "Lectures & Interaction" },
+];
   const headingTitles = subHeadings.map((x) => x.title);
 
   // ✅ Load from localStorage

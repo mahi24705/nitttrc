@@ -4,7 +4,7 @@ import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
 /** ✅ DB MODE ONLY */
-const API_BASE = "http://10.22.39.232:8080/api/pg-programmes";
+const API_BASE = "http://localhost:8080/api/pgcourses";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();

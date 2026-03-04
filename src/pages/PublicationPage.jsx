@@ -32,7 +32,7 @@ const SAMPLE = [
     year: 2018,
     title: "Communication Theory",
     authors: "—",
-    venue: "McGraw Hill (2018)",
+    publisher: "McGraw Hill (2018)", // ✅ changed
   },
   {
     id: "p4",
@@ -60,7 +60,8 @@ function badgeClass(type) {
 
 function toCitation(p) {
   const doiPart = p.doi ? ` DOI: ${doiUrl(p.doi)}` : "";
-  return `${p.authors} (${p.year}). ${p.title}. ${p.venue}.${doiPart}`;
+  const extra = p.type === "Book" ? p.publisher : p.venue; // ✅ book uses publisher
+  return `${p.authors} (${p.year}). ${p.title}. ${extra}.${doiPart}`;
 }
 
 export default function PublicationPage() {
@@ -81,11 +82,13 @@ export default function PublicationPage() {
       const matchesYear =
         yearFilter === "All years" ? true : p.year === Number(yearFilter);
 
+      const textDetails = p.type === "Book" ? p.publisher || "" : p.venue || "";
+
       const matchesQuery =
         !query ||
         (p.title || "").toLowerCase().includes(query) ||
         (p.authors || "").toLowerCase().includes(query) ||
-        (p.venue || "").toLowerCase().includes(query) ||
+        textDetails.toLowerCase().includes(query) ||
         String(p.year).includes(query) ||
         (p.type || "").toLowerCase().includes(query);
 
@@ -207,29 +210,32 @@ export default function PublicationPage() {
             {filtered.map((p) => (
               <div key={p.id} className="pub-card">
                 <div className="pub-card-head">
-                  <div className={badgeClass(p.type)}>
-                    {p.type} • {p.year}
-                  </div>
+                  <div className="pub-head-row">
+                    <div className={badgeClass(p.type)}>
+                      {p.type} • {p.year}
+                    </div>
 
-                  {/* RIGHT BUTTON STACK (like screenshot) */}
-                  <div className="action-stack">
-                    <button className="btn mini" onClick={() => copyCitation(p)}>
-                      Copy
-                    </button>
-
-                    {p.doi ? (
-                      <a
+                    <div className="pub-actions">
+                      <button
                         className="btn mini"
-                        href={doiUrl(p.doi)}
-                        target="_blank"
-                        rel="noreferrer"
+                        onClick={() => copyCitation(p)}
                       >
-                        DOI
-                      </a>
-                    ) : null}
+                        Copy
+                      </button>
 
-                    {/* Template Delete button (remove if not needed) */}
-                    <button className="btn mini danger">Delete</button>
+                      {p.doi ? (
+                        <a
+                          className="btn mini"
+                          href={doiUrl(p.doi)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          DOI
+                        </a>
+                      ) : null}
+
+                      <button className="btn mini danger">Delete</button>
+                    </div>
                   </div>
                 </div>
 
@@ -239,9 +245,17 @@ export default function PublicationPage() {
                   <div>
                     <b>Authors:</b> {p.authors}
                   </div>
-                  <div>
-                    <b>Venue:</b> {p.venue}
-                  </div>
+
+                  {/* ✅ Book => Publisher, others => Details */}
+                  {p.type === "Book" ? (
+                    <div>
+                      <b>Publisher:</b> {p.publisher}
+                    </div>
+                  ) : (
+                    <div>
+                      <b>Details:</b> {p.venue}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

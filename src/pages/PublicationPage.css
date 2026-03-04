@@ -188,9 +188,16 @@
 }
 .pub-card-head {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+}
+
+/* badge + buttons in same line */
+.pub-head-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:12px;
+  flex-wrap:wrap; /* small screen -> goes next line */
 }
 
 /* Badge */
@@ -260,12 +267,7 @@
 }
 
 /* Right stack */
-.action-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
-}
+
 
 /* Empty */
 .empty {
@@ -277,4 +279,10 @@
   text-align: center;
   font-weight: 900;
   color: #6b7785;
+}
+
+.pub-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }

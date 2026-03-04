@@ -3,7 +3,7 @@ import "./AsCoordinator.css"; // ✅ reuse same CSS UI
 import { AuthContext } from "../context/AuthContext";
 
 // ✅ ITEC API Endpoint
-const API_BASE = "http://10.22.39.232:8080/api/itec-programmes";
+const API_BASE = "http://10.22.39.232:8080/api/itec";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();

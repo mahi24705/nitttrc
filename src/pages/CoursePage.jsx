@@ -10,7 +10,7 @@ export default function CoursePage() {
   return (
     <div className="nitt-wrap">
       <div className="nitt-head">
-        <h1 className="nitt-title">{isPdpPage ? "PDP" : "Course"}</h1>
+        <h1 className="nitt-title">{isPdpPage ? "PDP" : "Courses"}</h1>
 
         {/* ✅ Subtitle changes based on page */}
         <p className="nitt-sub">
@@ -81,20 +81,15 @@ export default function CoursePage() {
               className="nitt-card"
               onClick={() => navigate("/as-coordinator")}
             >
-              <div className="nitt-card-title">AS Coordinator</div>
-              <div className="nitt-card-sub">
-                Coordinator Activities
-              </div>
+              <div className="nitt-card-title">As Coordinator</div>
             </button>
 
             <button
               className="nitt-card"
               onClick={() => navigate("/pdp-resource")}
             >
-              <div className="nitt-card-title">Resource Person</div>
-              <div className="nitt-card-sub">
-                PDP / ITEC Programmes
-              </div>
+              <div className="nitt-card-title">As Resource Person</div>
+             
             </button>
           </>
         )}

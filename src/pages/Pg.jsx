@@ -1,3 +1,4 @@
+// src/pages/Pg.jsx
 import { useEffect, useMemo, useState, useContext } from "react";
 import "./AsCoordinator.css"; // ✅ reuse same CSS UI
 import { AuthContext } from "../context/AuthContext";
@@ -21,6 +22,8 @@ export default function Pg() {
     mtech: "",
     courseName: "",
     courseCode: "",
+    subjectName: "",
+    subjectCode: "",
     period: "",
     semester: "",
     students: "",
@@ -36,12 +39,14 @@ export default function Pg() {
         const data = await res.json();
 
         // Expect backend rows like:
-        // { id, mtech, courseName, courseCode, period, semester, students }
+        // { id, mtech, courseName, courseCode, subjectName, subjectCode, period, semester, students }
         const mapped = (data || []).map((row) => ({
           id: row.id,
           mtech: row.mtech || "",
           courseName: row.courseName || "",
           courseCode: row.courseCode || "",
+          subjectName: row.subjectName || "",
+          subjectCode: row.subjectCode || "",
           period: row.period ?? "",
           semester: row.semester ?? "",
           students: row.students ?? "",
@@ -67,7 +72,7 @@ export default function Pg() {
 
     return items.filter((it) =>
       normalize(
-        `${it.mtech} ${it.courseName} ${it.courseCode} ${it.period} ${it.semester} ${it.students}`
+        `${it.mtech} ${it.courseName} ${it.courseCode} ${it.subjectName} ${it.subjectCode} ${it.period} ${it.semester} ${it.students}`
       ).includes(query)
     );
   }, [items, q]);
@@ -78,6 +83,8 @@ export default function Pg() {
       mtech: "",
       courseName: "",
       courseCode: "",
+      subjectName: "",
+      subjectCode: "",
       period: "",
       semester: "",
       students: "",
@@ -97,6 +104,8 @@ export default function Pg() {
       mtech: form.mtech.trim(),
       courseName: form.courseName.trim(),
       courseCode: form.courseCode.trim(),
+      subjectName: form.subjectName.trim(),
+      subjectCode: form.subjectCode.trim(),
       period: String(form.period).trim(),
       semester: String(form.semester).trim(),
       students: String(form.students).trim(),
@@ -106,6 +115,8 @@ export default function Pg() {
       !payload.mtech ||
       !payload.courseName ||
       !payload.courseCode ||
+      !payload.subjectName ||
+      !payload.subjectCode ||
       !payload.period ||
       !payload.semester ||
       !payload.students
@@ -114,7 +125,7 @@ export default function Pg() {
       return;
     }
 
-    // optional: validate students is number
+    // validate students is number
     if (Number.isNaN(Number(payload.students))) {
       alert("No. of Students must be a number.");
       return;
@@ -163,6 +174,8 @@ export default function Pg() {
       mtech: item.mtech || "",
       courseName: item.courseName || "",
       courseCode: item.courseCode || "",
+      subjectName: item.subjectName || "",
+      subjectCode: item.subjectCode || "",
       period: item.period ?? "",
       semester: item.semester ?? "",
       students: item.students ?? "",
@@ -197,7 +210,7 @@ export default function Pg() {
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search: mtech / course / code / period / semester / students..."
+            placeholder="Search: mtech / course / code / subject / period / semester / students..."
           />
           {isAdmin && (
             <button className="ghost" onClick={resetAll} title="Clear search/form">
@@ -220,6 +233,8 @@ export default function Pg() {
                 <div>M.Tech</div>
                 <div>Course name</div>
                 <div>Course code</div>
+                <div>Subject name</div>
+                <div>Subject code</div>
                 <div>Period (Years)</div>
                 <div>Semester</div>
                 <div>No. of Students</div>
@@ -232,6 +247,8 @@ export default function Pg() {
                   <div className="code">{it.mtech}</div>
                   <div className="programme">{it.courseName}</div>
                   <div className="code">{it.courseCode}</div>
+                  <div className="programme">{it.subjectName}</div>
+                  <div className="code">{it.subjectCode}</div>
                   <div className="muted">{it.period}</div>
                   <div className="muted">{it.semester}</div>
                   <div className="muted">{it.students}</div>
@@ -253,7 +270,7 @@ export default function Pg() {
         )}
       </div>
 
-      {true && (
+      {isAdmin && (
         <div className="panel bottom-form">
           <h2>{editingId ? "Edit Programme" : "Add Programme"}</h2>
 
@@ -282,6 +299,24 @@ export default function Pg() {
                 value={form.courseCode}
                 onChange={(e) => setForm({ ...form, courseCode: e.target.value })}
                 placeholder="Course code..."
+              />
+            </label>
+
+            <label>
+              Subject name
+              <input
+                value={form.subjectName}
+                onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
+                placeholder="Subject name..."
+              />
+            </label>
+
+            <label>
+              Subject code
+              <input
+                value={form.subjectCode}
+                onChange={(e) => setForm({ ...form, subjectCode: e.target.value })}
+                placeholder="Subject code..."
               />
             </label>
 

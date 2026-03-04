@@ -23,6 +23,7 @@ import PdpResource from "./pages/PdpResource";
 /* ✅ NEW PAGES (SAME TEMPLATE STYLE) */
 import Pg from "./pages/Pg";
 import Itec from "./pages/Itec";
+import Itp from "./pages/Itp"; // ✅ ADD THIS
 import HostInstitution from "./pages/HostInstitution";
 import Workshops from "./pages/Workshops";
 import InternationalCollaboration from "./pages/InternationalCollaboration";
@@ -54,6 +55,7 @@ function App() {
         {/* ✅ NEW ROUTES */}
         <Route path="/pg" element={<Pg />} />
         <Route path="/itec" element={<Itec />} />
+        <Route path="/itp" element={<Itp />} /> {/* ✅ ADD THIS */}
         <Route path="/host-institution" element={<HostInstitution />} />
         <Route path="/workshops" element={<Workshops />} />
         <Route

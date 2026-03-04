@@ -1,21 +1,42 @@
 // src/pages/Pg.jsx
 import { useEffect, useMemo, useState, useContext } from "react";
-import "./AsCoordinator.css"; // ✅ reuse same CSS UI
+import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
-// ✅ PG API Endpoint (change if needed)
+/** ✅ DB MODE ONLY */
 const API_BASE = "http://10.22.39.232:8080/api/pg-programmes";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
 
+function Row({ label, value }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "170px 1fr",
+        gap: "10px",
+        padding: "10px 0",
+        borderBottom: "1px solid rgba(0,0,0,0.06)",
+      }}
+    >
+      <div className="muted" style={{ fontWeight: 600 }}>
+        {label}
+      </div>
+      <div style={{ wordBreak: "break-word" }}>{value || "—"}</div>
+    </div>
+  );
+}
+
 export default function Pg() {
-  const { isAdmin } = useContext(AuthContext);
+  const { user, isAdmin } = useContext(AuthContext);
+  const isLoggedIn = !!user;
 
   const [q, setQ] = useState("");
   const [items, setItems] = useState([]); // ✅ DB is source
   const [loading, setLoading] = useState(true);
+  const [errMsg, setErrMsg] = useState("");
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -29,17 +50,18 @@ export default function Pg() {
     students: "",
   });
 
-  /* ✅ Load from DB on page load */
+  /** ✅ Load from DB on page load */
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
+        setErrMsg("");
+
         const res = await fetch(API_BASE);
-        if (!res.ok) throw new Error("Failed to load PG programmes");
+        if (!res.ok) throw new Error(`GET failed: ${res.status}`);
+
         const data = await res.json();
 
-        // Expect backend rows like:
-        // { id, mtech, courseName, courseCode, subjectName, subjectCode, period, semester, students }
         const mapped = (data || []).map((row) => ({
           id: row.id,
           mtech: row.mtech || "",
@@ -52,11 +74,11 @@ export default function Pg() {
           students: row.students ?? "",
         }));
 
-        // newest first
-        mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
+        mapped.sort((a, b) => (b.id || 0) - (a.id || 0)); // newest first
         setItems(mapped);
       } catch (e) {
         console.error(e);
+        setErrMsg("Could not load PG data from backend. Check Spring Boot + CORS.");
         setItems([]);
       } finally {
         setLoading(false);
@@ -66,6 +88,7 @@ export default function Pg() {
     load();
   }, []);
 
+  /** ✅ Search filter */
   const filteredItems = useMemo(() => {
     const query = normalize(q);
     if (!query) return items;
@@ -96,7 +119,7 @@ export default function Pg() {
     resetForm();
   }
 
-  /* ✅ ADD or UPDATE to DB */
+  /** ✅ ADD or UPDATE to DB */
   async function onSubmit(e) {
     e.preventDefault();
 
@@ -111,6 +134,7 @@ export default function Pg() {
       students: String(form.students).trim(),
     };
 
+    // ✅ required fields
     if (
       !payload.mtech ||
       !payload.courseName ||
@@ -125,13 +149,15 @@ export default function Pg() {
       return;
     }
 
-    // validate students is number
+    // ✅ validate students numeric
     if (Number.isNaN(Number(payload.students))) {
       alert("No. of Students must be a number.");
       return;
     }
 
     try {
+      setErrMsg("");
+
       let res;
       if (editingId) {
         res = await fetch(`${API_BASE}/${editingId}`, {
@@ -147,13 +173,13 @@ export default function Pg() {
         });
       }
 
-      if (!res.ok) throw new Error("Save failed");
-      const saved = await res.json(); // should return saved row with id
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
 
-      const uiItem = {
-        id: saved.id,
-        ...payload,
-      };
+      const saved = await res.json(); // should return saved row with id
+      const uiItem = { id: saved.id, ...payload };
 
       if (editingId) {
         setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
@@ -164,7 +190,7 @@ export default function Pg() {
       resetForm();
     } catch (err) {
       console.error(err);
-      alert("Save failed. Check backend running + endpoint.");
+      alert("Save failed: " + (err?.message || "Unknown error"));
     }
   }
 
@@ -183,17 +209,55 @@ export default function Pg() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  /* ✅ DELETE from DB */
+  /** ✅ DELETE from DB */
   async function onDelete(id) {
     if (!confirm("Delete this programme?")) return;
 
     try {
+      setErrMsg("");
+
       const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+
       setItems((prev) => prev.filter((it) => it.id !== id));
     } catch (e) {
       console.error(e);
-      alert("Delete failed. Check backend.");
+      alert("Delete failed: " + (e?.message || "Unknown error"));
+    }
+  }
+
+  /** ✅ REFRESH button (fetch again) */
+  async function refreshFromDb() {
+    try {
+      setLoading(true);
+      setErrMsg("");
+
+      const res = await fetch(API_BASE);
+      if (!res.ok) throw new Error(`GET failed: ${res.status}`);
+
+      const data = await res.json();
+      const mapped = (data || []).map((row) => ({
+        id: row.id,
+        mtech: row.mtech || "",
+        courseName: row.courseName || "",
+        courseCode: row.courseCode || "",
+        subjectName: row.subjectName || "",
+        subjectCode: row.subjectCode || "",
+        period: row.period ?? "",
+        semester: row.semester ?? "",
+        students: row.students ?? "",
+      }));
+
+      mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
+      setItems(mapped);
+    } catch (e) {
+      console.error(e);
+      setErrMsg("Refresh failed. Check backend logs / CORS.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -202,7 +266,7 @@ export default function Pg() {
       <header className="hero">
         <div className="hero-left">
           <h1>PG</h1>
-          <p>Post Graduate Programmes</p>
+          <p>Post Graduate Programmes (DB Mode)</p>
         </div>
 
         <div className="hero-right">
@@ -212,7 +276,12 @@ export default function Pg() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search: mtech / course / code / subject / period / semester / students..."
           />
-          {isAdmin && (
+
+          <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
+            Refresh
+          </button>
+
+          {(isAdmin || isLoggedIn) && (
             <button className="ghost" onClick={resetAll} title="Clear search/form">
               Clear
             </button>
@@ -220,41 +289,47 @@ export default function Pg() {
         </div>
       </header>
 
+      {errMsg && (
+        <div className="empty" style={{ marginBottom: 12 }}>
+          {errMsg}
+        </div>
+      )}
+
+      {/* ✅ VERTICAL LIST OUTPUT */}
       <div className="content">
         {loading ? (
-          <div className="empty">Loading from database...</div>
+          <div className="empty">Loading...</div>
         ) : filteredItems.length === 0 ? (
           <div className="empty">No data yet.</div>
         ) : (
-          <section className="group">
-            <div className="table">
-              <div className="tr head">
-                <div>S.No</div>
-                <div>M.Tech</div>
-                <div>Course name</div>
-                <div>Course code</div>
-                <div>Subject name</div>
-                <div>Subject code</div>
-                <div>Period (Years)</div>
-                <div>Semester</div>
-                <div>No. of Students</div>
-                {isAdmin && <div>Action</div>}
-              </div>
+          <div style={{ display: "grid", gap: 14 }}>
+            {filteredItems.map((it, idx) => (
+              <section className="group" key={it.id}>
+                <div className="group-head">
+                  <div className="group-date">Programme #{idx + 1}</div>
+                  {/* ✅ If you DON'T want to show id, delete this line */}
+                  <div className="group-count">ID: {it.id}</div>
+                </div>
 
-              {filteredItems.map((it, idx) => (
-                <div className="tr" key={it.id}>
-                  <div className="muted">{idx + 1}</div>
-                  <div className="code">{it.mtech}</div>
-                  <div className="programme">{it.courseName}</div>
-                  <div className="code">{it.courseCode}</div>
-                  <div className="programme">{it.subjectName}</div>
-                  <div className="code">{it.subjectCode}</div>
-                  <div className="muted">{it.period}</div>
-                  <div className="muted">{it.semester}</div>
-                  <div className="muted">{it.students}</div>
+                <div
+                  style={{
+                    background: "white",
+                    borderRadius: 14,
+                    padding: 16,
+                    border: "1px solid rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <Row label="M.Tech" value={it.mtech} />
+                  <Row label="Course name" value={it.courseName} />
+                  <Row label="Course code" value={it.courseCode} />
+                  <Row label="Subject name" value={it.subjectName} />
+                  <Row label="Subject code" value={it.subjectCode} />
+                  <Row label="Period (Years)" value={it.period} />
+                  <Row label="Semester" value={it.semester} />
+                  <Row label="No. of Students" value={it.students} />
 
                   {isAdmin && (
-                    <div className="actions">
+                    <div className="actions" style={{ marginTop: 12 }}>
                       <button className="edit" onClick={() => onEdit(it)}>
                         Edit
                       </button>
@@ -264,12 +339,13 @@ export default function Pg() {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
+            ))}
+          </div>
         )}
       </div>
 
+      {/* ✅ Add/Edit Form (Admin only) */}
       {isAdmin && (
         <div className="panel bottom-form">
           <h2>{editingId ? "Edit Programme" : "Add Programme"}</h2>
@@ -361,7 +437,9 @@ export default function Pg() {
         </div>
       )}
 
-      <footer className="footer">Now using database (MySQL) via Spring Boot API.</footer>
+      <footer className="footer">
+        Now using database (MySQL) via Spring Boot API.
+      </footer>
     </div>
   );
 }

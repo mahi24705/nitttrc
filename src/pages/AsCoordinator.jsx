@@ -370,7 +370,7 @@ export default function AsCoordinator() {
     <div className="page">
       <header className="hero">
         <div className="hero-left">
-          <h1>Professional Development Programmes (PDP)/As Coordinator</h1>
+          <h1>Professional Development Programmes (PDP) - As Coordinator</h1>
           <p>5 Days Training Program</p>
         </div>
 

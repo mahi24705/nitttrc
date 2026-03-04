@@ -11,7 +11,13 @@ export default function CoursePage() {
     <div className="nitt-wrap">
       <div className="nitt-head">
         <h1 className="nitt-title">{isPdpPage ? "PDP" : "Course"}</h1>
-        <p className="nitt-sub">Select a section to continue</p>
+
+        {/* ✅ Subtitle changes based on page */}
+        <p className="nitt-sub">
+          {isPdpPage
+            ? "Professional Development Programmes (PDP)"
+            : "Select a section to continue"}
+        </p>
       </div>
 
       <div className="nitt-grid">
@@ -23,7 +29,9 @@ export default function CoursePage() {
               onClick={() => navigate("/course/pdp")}
             >
               <div className="nitt-card-title">PDP</div>
-              <div className="nitt-card-sub">Professional Development Programmes (PDP)</div>
+              <div className="nitt-card-sub">
+                Professional Development Programmes (PDP)
+              </div>
             </button>
 
             {/* PG */}
@@ -32,8 +40,9 @@ export default function CoursePage() {
               onClick={() => navigate("/pg")}
             >
               <div className="nitt-card-title">PG</div>
-              <div className="nitt-card-sub">M.Tech / VLSI / Embedded system
-</div>
+              <div className="nitt-card-sub">
+                M.Tech / VLSI / Embedded system
+              </div>
             </button>
 
             {/* ITEC */}
@@ -53,16 +62,17 @@ export default function CoursePage() {
               <div className="nitt-card-title">Host Institution</div>
               <div className="nitt-card-sub">Host Institution Work</div>
             </button>
+
             {/* ITP */}
-<button
-  className="nitt-card"
-  onClick={() => navigate("/itp")}
->
-  <div className="nitt-card-title">ITP</div>
-  <div className="nitt-card-sub">
-    Industrial Training Program
-  </div>
-</button>
+            <button
+              className="nitt-card"
+              onClick={() => navigate("/itp")}
+            >
+              <div className="nitt-card-title">ITP</div>
+              <div className="nitt-card-sub">
+                Industrial Training Program
+              </div>
+            </button>
           </>
         ) : (
           <>
@@ -72,7 +82,9 @@ export default function CoursePage() {
               onClick={() => navigate("/as-coordinator")}
             >
               <div className="nitt-card-title">AS Coordinator</div>
-              <div className="nitt-card-sub">Coordinator Activities</div>
+              <div className="nitt-card-sub">
+                Coordinator Activities
+              </div>
             </button>
 
             <button
@@ -80,7 +92,9 @@ export default function CoursePage() {
               onClick={() => navigate("/pdp-resource")}
             >
               <div className="nitt-card-title">Resource Person</div>
-              <div className="nitt-card-sub">PDP / ITEC Programmes</div>
+              <div className="nitt-card-sub">
+                PDP / ITEC Programmes
+              </div>
             </button>
           </>
         )}

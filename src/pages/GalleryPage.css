@@ -1,0 +1,163 @@
+.gallery-container {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #1e3a8a, #0f172a);
+  color: white;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.control-panel {
+  max-width: 800px;
+  margin: auto;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.upload-section {
+  display: flex;
+  gap: 10px;
+}
+
+.upload-section input,
+.search-input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+}
+
+.gallery-grid {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 300px));
+  justify-content: center;
+  gap: 25px;
+}
+
+.gallery-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  color: black;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.card-body {
+  padding: 15px;
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.view-btn {
+  background: #3b82f6;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background: #06b6d4;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-section {
+  margin-top: 10px;
+}
+
+.edit-input {
+  padding: 6px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.save-btn {
+  background: #22c55e;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h2 {
+  color: #111827;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.modal-content img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  margin-bottom: 15px;
+}
+
+.close-btn {
+  background: red;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.empty-text {
+  text-align: center;
+  font-size: 18px;
+}

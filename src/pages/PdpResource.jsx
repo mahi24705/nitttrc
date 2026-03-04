@@ -375,7 +375,7 @@ export default function PdpResource() {
     <div className="page">
       <header className="hero">
         <div className="hero-left">
-          <h1>Professional Development Programmes (PDP) / As Resource person</h1>
+          <h1>Professional Development Programmes (PDP) - As Resource person</h1>
           <p>5 Days Training Program</p>
         </div>
 

@@ -1,16 +1,15 @@
 // src/pages/Itp.jsx
 import { useEffect, useMemo, useState, useContext } from "react";
-import "./PdpResource.css"; // ✅ reuse same UI CSS
+import "./PdpResource.css";
 import { AuthContext } from "../context/AuthContext";
 
-// ✅ CHANGE this endpoint to your ITP API
 const API = "http://10.22.39.232:8080/api/itpprogrammes";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
 
-/* ✅ Convert DD.MM.YYYY -> "MMM YYYY" */
+/* Convert "31.12.2025" -> "JAN 2025" (for grouping header) */
 function monthYearFromDDMMYYYY(ddmmyyyy) {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
   if (!m) return "—";
@@ -25,7 +24,6 @@ function monthYearFromDDMMYYYY(ddmmyyyy) {
   return `${months[idx] || "—"} ${yy}`;
 }
 
-/* ✅ Sort key for "MMM YYYY" */
 function monthYearKey(monYear) {
   const m = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
     (monYear || "").trim().toUpperCase()
@@ -49,50 +47,14 @@ function pillClass(mode) {
   return "pill other";
 }
 
-/** DD.MM.YYYY -> YYYY-MM-DD */
-function ddmmyyyyToIso(ddmmyyyy) {
-  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((ddmmyyyy || "").trim());
-  if (!m) return "";
-  const [, dd, mm, yy] = m;
-  return `${yy}-${mm}-${dd}`;
-}
+/** ✅ Accept both "31.12.2025" and "JAN 2025" but STORE as DD.MM.YYYY string */
+function normalizeDateInputToDDMMYYYY(input) {
+  const s = (input || "").trim().toUpperCase();
 
-/** YYYY-MM-DD -> DD.MM.YYYY */
-function isoToDdmmyyyy(iso) {
-  if (!iso) return "—";
-  const s = String(iso);
-  const pure = s.length >= 10 ? s.slice(0, 10) : s;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(pure.trim());
-  if (!m) return "—";
-  const [, yy, mm, dd] = m;
-  return `${dd}.${mm}.${yy}`;
-}
+  // DD.MM.YYYY
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) return s;
 
-/** ✅ Validate a real calendar date */
-function isValidIsoDate(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
-  if (!m) return false;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
-  const dt = new Date(Date.UTC(y, mo - 1, d));
-  return (
-    dt.getUTCFullYear() === y &&
-    dt.getUTCMonth() === mo - 1 &&
-    dt.getUTCDate() === d
-  );
-}
-
-/** ✅ Accepts BOTH "31.12.2025" and "JAN 2025" */
-function parseDateInputToIsoAndUi(dateInput) {
-  const s = (dateInput || "").trim().toUpperCase();
-
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
-    const iso = ddmmyyyyToIso(s);
-    if (!iso || !isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
-    return { displayDateIso: iso, uiDate: s };
-  }
-
+  // MON YYYY -> make "01.MM.YYYY"
   const monYear =
     /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
 
@@ -103,37 +65,31 @@ function parseDateInputToIsoAndUi(dateInput) {
     };
     const mm = monMap[monYear[1]];
     const yyyy = monYear[2];
-    const iso = `${yyyy}-${mm}-01`;
-    const ui = `01.${mm}.${yyyy}`;
-    if (!isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
-    return { displayDateIso: iso, uiDate: ui };
+    return `01.${mm}.${yyyy}`;
   }
 
-  return { displayDateIso: "", uiDate: "" };
+  return "";
 }
 
-/** Duration: "05.01.2026 - 09.01.2026" */
-function parseDurationToIsoRange(duration) {
+/** Duration: ensure format "DD.MM.YYYY - DD.MM.YYYY" */
+function normalizeDuration(duration) {
   const s = (duration || "")
     .replace(/[–—]/g, "-")
     .replace(/\s+/g, " ")
     .trim();
 
-  if (!s) return { startIso: "", endIso: "" };
+  if (!s) return "";
 
   const parts = s.includes(" to ")
-    ? s.split(" to ")
+    ? s.split(" to ").map((x) => x.trim())
     : s.split("-").map((x) => x.trim());
 
-  const start = (parts[0] || "").trim();
-  const end = (parts[1] || "").trim();
+  const start = parts[0] || "";
+  const end = parts[1] || "";
+  if (!/^\d{2}\.\d{2}\.\d{4}$/.test(start)) return "";
+  if (!/^\d{2}\.\d{2}\.\d{4}$/.test(end)) return "";
 
-  return { startIso: ddmmyyyyToIso(start), endIso: ddmmyyyyToIso(end) };
-}
-
-function makeDurationDdMm(startIso, endIso) {
-  if (!startIso || !endIso) return "—";
-  return `${isoToDdmmyyyy(startIso)} - ${isoToDdmmyyyy(endIso)}`;
+  return `${start} - ${end}`;
 }
 
 export default function Itp() {
@@ -148,42 +104,46 @@ export default function Itp() {
   const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
-    date: "",        // grouping date (month header)
+    date: "",        // grouping date (we will keep as DD.MM.YYYY for header grouping)
     code: "",
     title: "",
     duration: "",
     mode: "Contact",
-    sessionDate: "", // ✅ actual session date shown in table
+    sessionDate: "", // actual session date
   });
 
+  async function loadFromDb() {
+    try {
+      setLoading(true);
+      setErrMsg("");
+
+      const res = await fetch(API);
+      if (!res.ok) throw new Error(`GET failed: ${res.status}`);
+      const data = await res.json();
+
+      // ✅ Map backend -> UI
+      const ui = (data || []).map((x) => ({
+        id: x.id,
+        date: x.programmeDate || "—",     // used for grouping header
+        sessionDate: x.sessionDate || "—",
+        code: x.code || "—",
+        title: x.title || "—",
+        duration: x.duration || "—",
+        mode: x.mode || "—",
+      }));
+
+      setItems(ui);
+    } catch (e) {
+      console.error(e);
+      setErrMsg("Could not load data from backend. Check Spring Boot + CORS.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        setErrMsg("");
-
-        const res = await fetch(API);
-        if (!res.ok) throw new Error(`GET failed: ${res.status}`);
-        const data = await res.json();
-
-        const ui = (data || []).map((x) => ({
-          id: x.id,
-          date: isoToDdmmyyyy(x.displayDate),
-          sessionDate: isoToDdmmyyyy(x.displayDate),
-          code: x.code || "—",
-          title: x.programme || "—",
-          duration: makeDurationDdMm(x.startDate, x.endDate),
-          mode: x.mode || "—",
-        }));
-
-        setItems(ui);
-      } catch (e) {
-        console.error(e);
-        setErrMsg("Could not load data from backend. Check Spring Boot + CORS.");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadFromDb();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -226,43 +186,29 @@ export default function Itp() {
   async function onSubmit(e) {
     e.preventDefault();
 
-    const payloadUI = {
-      date: form.date.trim(),
-      code: form.code.trim(),
-      title: form.title.trim(),
-      duration: form.duration.trim(),
-      mode: form.mode,
-      sessionDate: form.sessionDate.trim(),
-    };
+    // ✅ Normalize dates
+    const programmeDate = normalizeDateInputToDDMMYYYY(form.date);
+    const sessionDate = normalizeDateInputToDDMMYYYY(form.sessionDate);
+    const duration = normalizeDuration(form.duration);
 
-    if (!payloadUI.date || !payloadUI.code || !payloadUI.title || !payloadUI.sessionDate) {
-      alert("Please fill Date, Code, Title, and Session Date.");
+    if (!programmeDate || !form.code.trim() || !form.title.trim() || !sessionDate) {
+      alert("Please fill Date, Code, Title, and Session Date (DD.MM.YYYY or JAN YYYY).");
       return;
     }
 
-    const { uiDate: groupUi } = parseDateInputToIsoAndUi(payloadUI.date);
-
-    const { displayDateIso: sessionIso, uiDate: sessionUi } =
-      parseDateInputToIsoAndUi(payloadUI.sessionDate);
-
-    if (!sessionIso) {
-      alert('Session Date must be "DD.MM.YYYY" OR "JAN 2025".');
+    if (!duration) {
+      alert("Duration must be: DD.MM.YYYY - DD.MM.YYYY");
       return;
     }
 
-    const { startIso, endIso } = parseDurationToIsoRange(payloadUI.duration);
-    if (!startIso || !endIso || !isValidIsoDate(startIso) || !isValidIsoDate(endIso)) {
-      alert("Duration must be DD.MM.YYYY - DD.MM.YYYY");
-      return;
-    }
-
+    // ✅ This body matches your backend fields EXACTLY
     const body = {
-      displayDate: sessionIso,
-      code: payloadUI.code,
-      programme: payloadUI.title,
-      startDate: startIso,
-      endDate: endIso,
-      mode: payloadUI.mode,
+      programmeDate,                 // string like "31.12.2025"
+      code: form.code.trim(),        // "ITP-01-001"
+      title: form.title.trim(),      // "Demo title"
+      duration,                      // "05.01.2026 - 09.01.2026"
+      mode: form.mode,               // "Contact"
+      sessionDate,                   // string like "31.12.2025"
     };
 
     try {
@@ -274,16 +220,17 @@ export default function Itp() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) throw new Error(`PUT failed: ${res.status}`);
+        if (!res.ok) throw new Error(await res.text());
+
         const saved = await res.json();
 
         const updated = {
           id: saved.id,
-          date: groupUi || payloadUI.date,
-          sessionDate: isoToDdmmyyyy(saved.displayDate),
+          date: saved.programmeDate || programmeDate,
+          sessionDate: saved.sessionDate || sessionDate,
           code: saved.code,
-          title: saved.programme,
-          duration: makeDurationDdMm(saved.startDate, saved.endDate),
+          title: saved.title,
+          duration: saved.duration,
           mode: saved.mode,
         };
 
@@ -294,44 +241,39 @@ export default function Itp() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) throw new Error(`POST failed: ${res.status}`);
+        if (!res.ok) throw new Error(await res.text());
+
         const saved = await res.json();
 
         const created = {
           id: saved.id,
-          date: groupUi || payloadUI.date,
-          sessionDate: isoToDdmmyyyy(saved.displayDate),
+          date: saved.programmeDate || programmeDate,
+          sessionDate: saved.sessionDate || sessionDate,
           code: saved.code,
-          title: saved.programme,
-          duration: makeDurationDdMm(saved.startDate, saved.endDate),
+          title: saved.title,
+          duration: saved.duration,
           mode: saved.mode,
         };
 
         setItems((prev) => [created, ...prev]);
       }
 
-      setForm((f) => ({
-        ...f,
-        date: groupUi || f.date,
-        sessionDate: sessionUi || f.sessionDate,
-      }));
-
       resetForm();
     } catch (e) {
       console.error(e);
-      setErrMsg("Save failed. Check backend logs / CORS / date formats.");
+      setErrMsg(`Save failed: ${e.message}`);
     }
   }
 
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      date: item.date || "",
-      code: item.code || "",
-      title: item.title || "",
-      duration: item.duration || "",
-      mode: item.mode || "Contact",
-      sessionDate: item.sessionDate || "",
+      date: item.date === "—" ? "" : item.date,
+      code: item.code === "—" ? "" : item.code,
+      title: item.title === "—" ? "" : item.title,
+      duration: item.duration === "—" ? "" : item.duration,
+      mode: item.mode && item.mode !== "—" ? item.mode : "Contact",
+      sessionDate: item.sessionDate === "—" ? "" : item.sessionDate,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -341,39 +283,16 @@ export default function Itp() {
     try {
       setErrMsg("");
       const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`DELETE failed: ${res.status}`);
+      if (!res.ok) throw new Error(await res.text());
       setItems((prev) => prev.filter((it) => it.id !== id));
     } catch (e) {
       console.error(e);
-      setErrMsg("Delete failed. Check backend logs / CORS.");
+      setErrMsg(`Delete failed: ${e.message}`);
     }
   }
 
   async function refreshFromDb() {
-    try {
-      setLoading(true);
-      setErrMsg("");
-      const res = await fetch(API);
-      if (!res.ok) throw new Error(`GET failed: ${res.status}`);
-      const data = await res.json();
-
-      const ui = (data || []).map((x) => ({
-        id: x.id,
-        date: isoToDdmmyyyy(x.displayDate),
-        sessionDate: isoToDdmmyyyy(x.displayDate),
-        code: x.code || "—",
-        title: x.programme || "—",
-        duration: makeDurationDdMm(x.startDate, x.endDate),
-        mode: x.mode || "—",
-      }));
-
-      setItems(ui);
-    } catch (e) {
-      console.error(e);
-      setErrMsg("Refresh failed. Check backend logs / CORS.");
-    } finally {
-      setLoading(false);
-    }
+    await loadFromDb();
   }
 
   return (
@@ -438,7 +357,6 @@ export default function Itp() {
                     <div>
                       <span className={pillClass(it.mode)}>{it.mode}</span>
                     </div>
-
                     <div className="muted">{it.sessionDate || it.date}</div>
 
                     <div className="actions">

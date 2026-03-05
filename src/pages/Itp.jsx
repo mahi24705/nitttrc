@@ -4,7 +4,7 @@ import "./PdpResource.css"; // ✅ reuse same UI CSS
 import { AuthContext } from "../context/AuthContext";
 
 // ✅ CHANGE this endpoint to your ITP API
-const API = "http://10.22.39.232:8080/api/itp";
+const API = "http://10.22.39.232:8080/api/itpprogrammes";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();

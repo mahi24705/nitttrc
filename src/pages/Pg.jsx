@@ -34,13 +34,16 @@ export default function Pg() {
   const isLoggedIn = !!user;
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState([]); // ✅ DB is source
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
+    // ✅ default value set here
     mtech: "M.Tech VLSI Embedded System",
+    // ✅ courseName removed
+    // ✅ courseCode removed
     subjectName: "",
     subjectCode: "",
     period: "",
@@ -48,7 +51,7 @@ export default function Pg() {
     students: "",
   });
 
-  /** LOAD FROM DB */
+  /** ✅ Load from DB on page load */
   useEffect(() => {
     const load = async () => {
       try {
@@ -60,21 +63,23 @@ export default function Pg() {
 
         const data = await res.json();
 
+        // ✅ Map BACKEND -> UI
         const mapped = (data || []).map((row) => ({
           id: row.id,
-          mtech: row.mtech || "",
+          mtech: row.programme || "", // ✅ backend: programme
+          // courseName/courseCode removed from UI
           subjectName: row.subjectName || "",
           subjectCode: row.subjectCode || "",
-          period: row.period ?? "",
+          period: row.periodYears ?? "", // ✅ backend: periodYears
           semester: row.semester ?? "",
-          students: row.students ?? "",
+          students: row.noOfStudents ?? "", // ✅ backend: noOfStudents
         }));
 
-        mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
+        mapped.sort((a, b) => (b.id || 0) - (a.id || 0)); // newest first
         setItems(mapped);
       } catch (e) {
         console.error(e);
-        setErrMsg("Could not load PG data from backend.");
+        setErrMsg("Could not load PG data from backend. Check Spring Boot + CORS.");
         setItems([]);
       } finally {
         setLoading(false);
@@ -84,13 +89,14 @@ export default function Pg() {
     load();
   }, []);
 
-  /** SEARCH */
+  /** ✅ Search filter */
   const filteredItems = useMemo(() => {
     const query = normalize(q);
     if (!query) return items;
 
     return items.filter((it) =>
       normalize(
+        // ✅ courseName/courseCode removed from search string
         `${it.mtech} ${it.subjectName} ${it.subjectCode} ${it.period} ${it.semester} ${it.students}`
       ).includes(query)
     );
@@ -100,6 +106,7 @@ export default function Pg() {
     setEditingId(null);
     setForm({
       mtech: "M.Tech VLSI Embedded System",
+      // courseName/courseCode removed
       subjectName: "",
       subjectCode: "",
       period: "",
@@ -113,33 +120,43 @@ export default function Pg() {
     resetForm();
   }
 
-  /** ADD / UPDATE */
+  /** ✅ ADD or UPDATE to DB */
   async function onSubmit(e) {
     e.preventDefault();
 
+    // ✅ UI -> BACKEND payload mapping
     const payload = {
-      mtech: form.mtech.trim(),
+      programme: form.mtech.trim(),
+      // courseName/courseCode removed (send null to backend if fields exist)
+      courseName: null,
+      courseCode: null,
       subjectName: form.subjectName.trim(),
       subjectCode: form.subjectCode.trim(),
-      period: String(form.period).trim(),
+      periodYears: Number(form.period),
       semester: String(form.semester).trim(),
-      students: String(form.students).trim(),
+      noOfStudents: Number(form.students),
     };
 
+    // ✅ required fields (courseName/courseCode removed)
     if (
-      !payload.mtech ||
+      !payload.programme ||
       !payload.subjectName ||
       !payload.subjectCode ||
-      !payload.period ||
+      !String(form.period).trim() ||
       !payload.semester ||
-      !payload.students
+      !String(form.students).trim()
     ) {
       alert("Please fill all fields.");
       return;
     }
 
-    if (Number.isNaN(Number(payload.students))) {
-      alert("No. of Students must be a number.");
+    // ✅ validate numeric
+    if (Number.isNaN(payload.periodYears)) {
+      alert("Period (Years) must be a number.");
+      return;
+    }
+    if (Number.isNaN(payload.noOfStudents)) {
+      alert("No of Students must be a number.");
       return;
     }
 
@@ -166,8 +183,18 @@ export default function Pg() {
         throw new Error(txt || `HTTP ${res.status}`);
       }
 
-      const saved = await res.json();
-      const uiItem = { id: saved.id, ...payload };
+      const saved = await res.json(); // should return saved row with id
+
+      // ✅ BACKEND -> UI after save
+      const uiItem = {
+        id: saved.id,
+        mtech: saved.programme ?? payload.programme,
+        subjectName: saved.subjectName ?? payload.subjectName,
+        subjectCode: saved.subjectCode ?? payload.subjectCode,
+        period: saved.periodYears ?? payload.periodYears,
+        semester: saved.semester ?? payload.semester,
+        students: saved.noOfStudents ?? payload.noOfStudents,
+      };
 
       if (editingId) {
         setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
@@ -186,6 +213,7 @@ export default function Pg() {
     setEditingId(item.id);
     setForm({
       mtech: item.mtech || "M.Tech VLSI Embedded System",
+      // courseName/courseCode removed
       subjectName: item.subjectName || "",
       subjectCode: item.subjectCode || "",
       period: item.period ?? "",
@@ -195,7 +223,7 @@ export default function Pg() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  /** DELETE */
+  /** ✅ DELETE from DB */
   async function onDelete(id) {
     if (!confirm("Delete this programme?")) return;
 
@@ -215,7 +243,7 @@ export default function Pg() {
     }
   }
 
-  /** REFRESH */
+  /** ✅ REFRESH button (fetch again) */
   async function refreshFromDb() {
     try {
       setLoading(true);
@@ -225,21 +253,23 @@ export default function Pg() {
       if (!res.ok) throw new Error(`GET failed: ${res.status}`);
 
       const data = await res.json();
+
       const mapped = (data || []).map((row) => ({
         id: row.id,
-        mtech: row.mtech || "",
+        mtech: row.programme || "",
+        // courseName/courseCode removed
         subjectName: row.subjectName || "",
         subjectCode: row.subjectCode || "",
-        period: row.period ?? "",
+        period: row.periodYears ?? "",
         semester: row.semester ?? "",
-        students: row.students ?? "",
+        students: row.noOfStudents ?? "",
       }));
 
       mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
       setItems(mapped);
     } catch (e) {
       console.error(e);
-      setErrMsg("Refresh failed.");
+      setErrMsg("Refresh failed. Check backend logs / CORS.");
     } finally {
       setLoading(false);
     }
@@ -258,21 +288,28 @@ export default function Pg() {
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search..."
+            placeholder="Search: mtech / subject / period / semester / students..."
           />
 
-          <button className="ghost" onClick={refreshFromDb}>
+          <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
             Refresh
           </button>
 
           {(isAdmin || isLoggedIn) && (
-            <button className="ghost" onClick={resetAll}>
+            <button className="ghost" onClick={resetAll} title="Clear search/form">
               Clear
             </button>
           )}
         </div>
       </header>
 
+      {errMsg && (
+        <div className="empty" style={{ marginBottom: 12 }}>
+          {errMsg}
+        </div>
+      )}
+
+      {/* ✅ VERTICAL LIST OUTPUT */}
       <div className="content">
         {loading ? (
           <div className="empty">Loading...</div>
@@ -284,6 +321,7 @@ export default function Pg() {
               <section className="group" key={it.id}>
                 <div className="group-head">
                   <div className="group-date">Programme #{idx + 1}</div>
+                  {/* ✅ ID REMOVED */}
                 </div>
 
                 <div
@@ -295,6 +333,8 @@ export default function Pg() {
                   }}
                 >
                   <Row label="Programme name" value={it.mtech} />
+                  {/* ✅ courseName removed */}
+                  {/* ✅ courseCode removed */}
                   <Row label="Subject name" value={it.subjectName} />
                   <Row label="Subject code" value={it.subjectCode} />
                   <Row label="Period (Years)" value={it.period} />
@@ -318,24 +358,30 @@ export default function Pg() {
         )}
       </div>
 
+      {/* ✅ Add/Edit Form (Admin only) */}
       {isAdmin && (
         <div className="panel bottom-form">
           <h2>{editingId ? "Edit Programme" : "Add Programme"}</h2>
 
           <form onSubmit={onSubmit} className="form">
             <label>
-              Programme name
+              Programme
               <input
                 value={form.mtech}
                 onChange={(e) => setForm({ ...form, mtech: e.target.value })}
+                placeholder="M.Tech VLSI Embedded System"
               />
             </label>
+
+            {/* ✅ courseName removed */}
+            {/* ✅ courseCode removed */}
 
             <label>
               Subject name
               <input
                 value={form.subjectName}
                 onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
+                placeholder="Subject name..."
               />
             </label>
 
@@ -344,6 +390,7 @@ export default function Pg() {
               <input
                 value={form.subjectCode}
                 onChange={(e) => setForm({ ...form, subjectCode: e.target.value })}
+                placeholder="Subject code..."
               />
             </label>
 
@@ -352,6 +399,7 @@ export default function Pg() {
               <input
                 value={form.period}
                 onChange={(e) => setForm({ ...form, period: e.target.value })}
+                placeholder="2"
               />
             </label>
 
@@ -360,6 +408,7 @@ export default function Pg() {
               <input
                 value={form.semester}
                 onChange={(e) => setForm({ ...form, semester: e.target.value })}
+                placeholder="1 / 2 / 3..."
               />
             </label>
 
@@ -368,6 +417,7 @@ export default function Pg() {
               <input
                 value={form.students}
                 onChange={(e) => setForm({ ...form, students: e.target.value })}
+                placeholder="60"
               />
             </label>
 

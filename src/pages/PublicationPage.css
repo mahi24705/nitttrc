@@ -60,7 +60,7 @@
   }
 }
 
-/* Sidebar */
+/* Sidebar card */
 .card {
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -146,6 +146,11 @@
   grid-template-columns: 240px 240px;
   gap: 14px;
 }
+@media (max-width: 600px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
 .stat {
   background: rgba(255, 255, 255, 0.85);
   border-radius: 18px;
@@ -186,18 +191,14 @@
   padding: 18px;
   box-shadow: 0 18px 35px rgba(0, 0, 0, 0.08);
 }
-.pub-card-head {
-  display: flex;
-  align-items: flex-start;
-}
 
 /* badge + buttons in same line */
-.pub-head-row{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:12px;
-  flex-wrap:wrap; /* small screen -> goes next line */
+.pub-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* Badge */
@@ -265,9 +266,20 @@
   border-color: #ffc4c7;
   color: #b3181e;
 }
+.btn.primary {
+  background: #0d6ea8;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #fff;
+}
+.btn.primary:hover {
+  background: #0b5b8b;
+}
 
-/* Right stack */
-
+.pub-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 /* Empty */
 .empty {
@@ -281,8 +293,62 @@
   color: #6b7785;
 }
 
-.pub-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
+/* Form at bottom */
+.pub-form {
+  margin-top: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1);
+}
+.pub-form h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 900;
+  color: #0b3656;
+}
+
+.pub-form form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pub-form input,
+.pub-form select {
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  outline: none;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.pub-form input:focus,
+.pub-form select:focus {
+  border-color: rgba(13, 110, 168, 0.55);
+  box-shadow: 0 0 0 3px rgba(13, 110, 168, 0.14);
+}
+
+.pub-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+}
+
+.pub-form-actions .btn {
+  height: 46px;
+  border-radius: 14px;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .pub-form form {
+    grid-template-columns: 1fr;
+  }
+  .pub-form-actions {
+    flex-direction: column;
+  }
 }

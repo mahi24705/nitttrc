@@ -12,7 +12,6 @@ export default function CoursePage() {
       <div className="nitt-head">
         <h1 className="nitt-title">{isPdpPage ? "PDP" : "Courses"}</h1>
 
-        {/* ✅ Subtitle changes based on page */}
         <p className="nitt-sub">
           {isPdpPage
             ? "Professional Development Programmes (PDP)"
@@ -20,80 +19,56 @@ export default function CoursePage() {
         </p>
       </div>
 
-      <div className="nitt-grid">
-        {!isPdpPage ? (
-          <>
-            {/* PDP */}
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/course/pdp")}
-            >
-              <div className="nitt-card-title">PDP</div>
-              <div className="nitt-card-sub">
-                Professional Development Programmes (PDP)
-              </div>
-            </button>
+      {/* ✅ PDP Inner page: 2 boxes only, centered */}
+      {isPdpPage ? (
+        <div className="pdp-inner">
+          <button
+            className="nitt-card pdp-card"
+            onClick={() => navigate("/as-coordinator")}
+          >
+            <div className="nitt-card-title">As Coordinator</div>
+          </button>
 
-            {/* PG */}
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/pg")}
-            >
-              <div className="nitt-card-title">PG</div>
-              <div className="nitt-card-sub">
-                M.Tech / VLSI / Embedded system
-              </div>
-            </button>
+          <button
+            className="nitt-card pdp-card"
+            onClick={() => navigate("/pdp-resource")}
+          >
+            <div className="nitt-card-title">As Resource Person</div>
+          </button>
+        </div>
+      ) : (
+        <div className="nitt-grid">
+          <button className="nitt-card" onClick={() => navigate("/course/pdp")}>
+            <div className="nitt-card-title">PDP</div>
+            <div className="nitt-card-sub">
+              Professional Development Programmes (PDP)
+            </div>
+          </button>
 
-            {/* ITEC */}
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/itec")}
-            >
-              <div className="nitt-card-title">ITEC</div>
-              <div className="nitt-card-sub">ITEC Programmes</div>
-            </button>
+          <button className="nitt-card" onClick={() => navigate("/pg")}>
+            <div className="nitt-card-title">PG</div>
+            <div className="nitt-card-sub">M.Tech / VLSI / Embedded system</div>
+          </button>
 
-            {/* Host Institution */}
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/host-institution")}
-            >
-              <div className="nitt-card-title">Host Institution</div>
-              <div className="nitt-card-sub">Host Institution Work</div>
-            </button>
+          <button className="nitt-card" onClick={() => navigate("/itec")}>
+            <div className="nitt-card-title">ITEC</div>
+            <div className="nitt-card-sub">ITEC Programmes</div>
+          </button>
 
-            {/* ITP */}
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/itp")}
-            >
-              <div className="nitt-card-title">ITP</div>
-              <div className="nitt-card-sub">
-                Industrial Training Program
-              </div>
-            </button>
-          </>
-        ) : (
-          <>
-            {/* PDP INNER PAGE */}
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/as-coordinator")}
-            >
-              <div className="nitt-card-title">As Coordinator</div>
-            </button>
+          <button
+            className="nitt-card"
+            onClick={() => navigate("/host-institution")}
+          >
+            <div className="nitt-card-title">Host Institution</div>
+            <div className="nitt-card-sub">Host Institution Work</div>
+          </button>
 
-            <button
-              className="nitt-card"
-              onClick={() => navigate("/pdp-resource")}
-            >
-              <div className="nitt-card-title">As Resource Person</div>
-             
-            </button>
-          </>
-        )}
-      </div>
+          <button className="nitt-card" onClick={() => navigate("/itp")}>
+            <div className="nitt-card-title">ITP</div>
+            <div className="nitt-card-sub">Industrial Training Program</div>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

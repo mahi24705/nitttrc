@@ -250,7 +250,7 @@ export default function Pg() {
       <header className="hero">
         <div className="hero-left">
           <h1>PG</h1>
-          <p>Post Graduate Programmes</p>
+          <p>Post Graduate Programmes </p>
         </div>
 
         <div className="hero-right">
@@ -324,7 +324,7 @@ export default function Pg() {
 
           <form onSubmit={onSubmit} className="form">
             <label>
-              Programme name
+              Programme Name
               <input
                 value={form.mtech}
                 onChange={(e) => setForm({ ...form, mtech: e.target.value })}
@@ -332,7 +332,7 @@ export default function Pg() {
             </label>
 
             <label>
-              Subject name
+              Subject Name
               <input
                 value={form.subjectName}
                 onChange={(e) => setForm({ ...form, subjectName: e.target.value })}

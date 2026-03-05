@@ -6,6 +6,8 @@ import { AuthContext } from "../context/AuthContext";
 /** ✅ DB MODE ONLY */
 const API_BASE = "http://10.22.39.232:8080/api/pgcourses";
 
+const DEFAULT_PROGRAMME = "M.Tech VLSI Embedded System";
+
 function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
@@ -40,15 +42,12 @@ export default function Pg() {
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
-    // ✅ default value set here
-    mtech: "M.Tech VLSI Embedded System",
-    // ✅ courseName removed
-    // ✅ courseCode removed
+    programme: DEFAULT_PROGRAMME,
     subjectName: "",
     subjectCode: "",
-    period: "",
+    periodYears: "",
     semester: "",
-    students: "",
+    noOfStudents: "",
   });
 
   /** ✅ Load from DB on page load */
@@ -63,16 +62,14 @@ export default function Pg() {
 
         const data = await res.json();
 
-        // ✅ Map BACKEND -> UI
         const mapped = (data || []).map((row) => ({
           id: row.id,
-          mtech: row.programme || "", // ✅ backend: programme
-          // courseName/courseCode removed from UI
+          programme: row.programme ?? row.mtech ?? "", // ✅ supports old field if exists
           subjectName: row.subjectName || "",
           subjectCode: row.subjectCode || "",
-          period: row.periodYears ?? "", // ✅ backend: periodYears
+          periodYears: row.periodYears ?? row.period ?? "",
           semester: row.semester ?? "",
-          students: row.noOfStudents ?? "", // ✅ backend: noOfStudents
+          noOfStudents: row.noOfStudents ?? row.students ?? "",
         }));
 
         mapped.sort((a, b) => (b.id || 0) - (a.id || 0)); // newest first
@@ -96,8 +93,7 @@ export default function Pg() {
 
     return items.filter((it) =>
       normalize(
-        // ✅ courseName/courseCode removed from search string
-        `${it.mtech} ${it.subjectName} ${it.subjectCode} ${it.period} ${it.semester} ${it.students}`
+        `${it.programme} ${it.subjectName} ${it.subjectCode} ${it.periodYears} ${it.semester} ${it.noOfStudents}`
       ).includes(query)
     );
   }, [items, q]);
@@ -105,13 +101,12 @@ export default function Pg() {
   function resetForm() {
     setEditingId(null);
     setForm({
-      mtech: "M.Tech VLSI Embedded System",
-      // courseName/courseCode removed
+      programme: DEFAULT_PROGRAMME,
       subjectName: "",
       subjectCode: "",
-      period: "",
+      periodYears: "",
       semester: "",
-      students: "",
+      noOfStudents: "",
     });
   }
 
@@ -124,27 +119,23 @@ export default function Pg() {
   async function onSubmit(e) {
     e.preventDefault();
 
-    // ✅ UI -> BACKEND payload mapping
     const payload = {
-      programme: form.mtech.trim(),
-      // courseName/courseCode removed (send null to backend if fields exist)
-      courseName: null,
-      courseCode: null,
-      subjectName: form.subjectName.trim(),
-      subjectCode: form.subjectCode.trim(),
-      periodYears: Number(form.period),
-      semester: String(form.semester).trim(),
-      noOfStudents: Number(form.students),
+      programme: String(form.programme || "").trim(),
+      subjectName: String(form.subjectName || "").trim(),
+      subjectCode: String(form.subjectCode || "").trim(),
+      periodYears: Number(String(form.periodYears || "").trim()),
+      semester: String(form.semester || "").trim(),
+      noOfStudents: Number(String(form.noOfStudents || "").trim()),
     };
 
-    // ✅ required fields (courseName/courseCode removed)
+    // ✅ required fields
     if (
       !payload.programme ||
       !payload.subjectName ||
       !payload.subjectCode ||
-      !String(form.period).trim() ||
+      !String(form.periodYears).trim() ||
       !payload.semester ||
-      !String(form.students).trim()
+      !String(form.noOfStudents).trim()
     ) {
       alert("Please fill all fields.");
       return;
@@ -184,17 +175,7 @@ export default function Pg() {
       }
 
       const saved = await res.json(); // should return saved row with id
-
-      // ✅ BACKEND -> UI after save
-      const uiItem = {
-        id: saved.id,
-        mtech: saved.programme ?? payload.programme,
-        subjectName: saved.subjectName ?? payload.subjectName,
-        subjectCode: saved.subjectCode ?? payload.subjectCode,
-        period: saved.periodYears ?? payload.periodYears,
-        semester: saved.semester ?? payload.semester,
-        students: saved.noOfStudents ?? payload.noOfStudents,
-      };
+      const uiItem = { id: saved.id ?? editingId ?? Date.now(), ...payload };
 
       if (editingId) {
         setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
@@ -212,13 +193,12 @@ export default function Pg() {
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      mtech: item.mtech || "M.Tech VLSI Embedded System",
-      // courseName/courseCode removed
+      programme: item.programme || DEFAULT_PROGRAMME,
       subjectName: item.subjectName || "",
       subjectCode: item.subjectCode || "",
-      period: item.period ?? "",
+      periodYears: item.periodYears ?? "",
       semester: item.semester ?? "",
-      students: item.students ?? "",
+      noOfStudents: item.noOfStudents ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -253,16 +233,14 @@ export default function Pg() {
       if (!res.ok) throw new Error(`GET failed: ${res.status}`);
 
       const data = await res.json();
-
       const mapped = (data || []).map((row) => ({
         id: row.id,
-        mtech: row.programme || "",
-        // courseName/courseCode removed
+        programme: row.programme ?? row.mtech ?? "",
         subjectName: row.subjectName || "",
         subjectCode: row.subjectCode || "",
-        period: row.periodYears ?? "",
+        periodYears: row.periodYears ?? row.period ?? "",
         semester: row.semester ?? "",
-        students: row.noOfStudents ?? "",
+        noOfStudents: row.noOfStudents ?? row.students ?? "",
       }));
 
       mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
@@ -288,7 +266,7 @@ export default function Pg() {
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search: mtech / subject / period / semester / students..."
+            placeholder="Search: programme / subject / period / semester / students..."
           />
 
           <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
@@ -321,7 +299,6 @@ export default function Pg() {
               <section className="group" key={it.id}>
                 <div className="group-head">
                   <div className="group-date">Programme #{idx + 1}</div>
-                  {/* ✅ ID REMOVED */}
                 </div>
 
                 <div
@@ -332,14 +309,15 @@ export default function Pg() {
                     border: "1px solid rgba(0,0,0,0.06)",
                   }}
                 >
-                  <Row label="Programme name" value={it.mtech} />
-                  {/* ✅ courseName removed */}
-                  {/* ✅ courseCode removed */}
+                  <Row
+                    label="Programme name"
+                    value={it.programme || DEFAULT_PROGRAMME} // ✅ show default if DB null
+                  />
                   <Row label="Subject name" value={it.subjectName} />
                   <Row label="Subject code" value={it.subjectCode} />
-                  <Row label="Period (Years)" value={it.period} />
-                  <Row label="Semester" value={it.semester} />
-                  <Row label="No of Students" value={it.students} />
+                  <Row label="Period (Years)" value={String(it.periodYears ?? "")} />
+                  <Row label="Semester" value={String(it.semester ?? "")} />
+                  <Row label="No of Students" value={String(it.noOfStudents ?? "")} />
 
                   {isAdmin && (
                     <div className="actions" style={{ marginTop: 12 }}>
@@ -365,19 +343,16 @@ export default function Pg() {
 
           <form onSubmit={onSubmit} className="form">
             <label>
-              Programme
+              Programme Name
               <input
-                value={form.mtech}
-                onChange={(e) => setForm({ ...form, mtech: e.target.value })}
-                placeholder="M.Tech VLSI Embedded System"
+                value={form.programme}
+                onChange={(e) => setForm({ ...form, programme: e.target.value })}
+                placeholder={DEFAULT_PROGRAMME}
               />
             </label>
 
-            {/* ✅ courseName removed */}
-            {/* ✅ courseCode removed */}
-
             <label>
-              Subject name
+              Subject Name
               <input
                 value={form.subjectName}
                 onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
@@ -397,8 +372,8 @@ export default function Pg() {
             <label>
               Period (Years)
               <input
-                value={form.period}
-                onChange={(e) => setForm({ ...form, period: e.target.value })}
+                value={form.periodYears}
+                onChange={(e) => setForm({ ...form, periodYears: e.target.value })}
                 placeholder="2"
               />
             </label>
@@ -415,8 +390,8 @@ export default function Pg() {
             <label>
               No of Students
               <input
-                value={form.students}
-                onChange={(e) => setForm({ ...form, students: e.target.value })}
+                value={form.noOfStudents}
+                onChange={(e) => setForm({ ...form, noOfStudents: e.target.value })}
                 placeholder="60"
               />
             </label>

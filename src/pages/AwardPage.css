@@ -1,0 +1,118 @@
+.award-container {
+  padding: 60px 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #001f3f, #0077b6);
+  color: white;
+  text-align: center;
+}
+
+.award-title {
+  font-size: 38px;
+  margin-bottom: 40px;
+}
+
+.award-flex {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.award-column {
+  width: 400px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 30px;
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.award-column h3 {
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 10px;
+}
+
+.award-list {
+  list-style: none;
+  padding: 0;
+}
+
+.award-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  transition: 0.3s;
+}
+
+.award-text {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.award-year {
+  background: #00b4d8;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.action-buttons button {
+  margin-left: 5px;
+  background: crimson;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.action-buttons button:first-child {
+  background: #00b4d8;
+}
+
+.admin-box {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-box input {
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+  flex: 1;
+  min-width: 120px;
+}
+
+.admin-box button {
+  padding: 6px 10px;
+  border: none;
+  background: #00b4d8;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 📱 Mobile */
+@media (max-width: 768px) {
+  .award-column {
+    width: 100%;
+  }
+
+  .award-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .action-buttons {
+    align-self: flex-end;
+  }
+}

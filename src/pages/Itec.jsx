@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useContext } from "react";
 import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
-const API_BASE = "http://10.22.39.232:8080/api/itec";
+const API_BASE = "http://localhost:8080/api/itec";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();

@@ -4,7 +4,7 @@ import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
 /** ✅ DB MODE ONLY */
-const API_BASE = "http://10.22.39.232:8080/api/pgcourses";
+const API_BASE = "http://localhost:8080/api/pgcourses";
 
 const DEFAULT_PROGRAMME = "M.Tech VLSI Embedded System";
 

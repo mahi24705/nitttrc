@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useContext } from "react";
 import "./PdpResource.css";
 import { AuthContext } from "../context/AuthContext";
 
-const API = "http://10.22.39.232:8080/api/pdp";
+const API = "http://localhost:8080/api/pdp";
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();

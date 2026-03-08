@@ -80,15 +80,55 @@ export default function PublicationPage() {
     return Array.from(new Set(pubs.map((p) => p.year))).sort((a, b) => b - a);
   }, [pubs]);
 
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
+  /* ---------- COUNTS FOR SIDEBAR ---------- */
 
+  const typeCounts = useMemo(() => {
+    const base =
+      yearFilter === "All years"
+        ? pubs
+        : pubs.filter((p) => p.year === Number(yearFilter));
+
+    return {
+      All: base.length,
+      Journal: base.filter((p) => p.type === "Journal").length,
+      Conference: base.filter((p) => p.type === "Conference").length,
+      Book: base.filter((p) => p.type === "Book").length,
+    };
+  }, [pubs, yearFilter]);
+
+  const yearCounts = useMemo(() => {
+    const base =
+      typeFilter === "All"
+        ? pubs
+        : pubs.filter((p) => p.type === typeFilter);
+
+    const map = {};
+    years.forEach((y) => {
+      map[y] = base.filter((p) => p.year === y).length;
+    });
+
+    return {
+      allYears: base.length,
+      byYear: map,
+    };
+  }, [pubs, years, typeFilter]);
+
+  /* ---------- TOTAL = TYPE + YEAR FILTER ONLY ---------- */
+  const totalFiltered = useMemo(() => {
     return pubs.filter((p) => {
       const matchesType = typeFilter === "All" ? true : p.type === typeFilter;
-
       const matchesYear =
         yearFilter === "All years" ? true : p.year === Number(yearFilter);
 
+      return matchesType && matchesYear;
+    });
+  }, [pubs, typeFilter, yearFilter]);
+
+  /* ---------- SHOWING = TYPE + YEAR + SEARCH ---------- */
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+
+    return totalFiltered.filter((p) => {
       const matchesQuery =
         !query ||
         (p.title || "").toLowerCase().includes(query) ||
@@ -97,9 +137,9 @@ export default function PublicationPage() {
         String(p.year).includes(query) ||
         (p.type || "").toLowerCase().includes(query);
 
-      return matchesType && matchesYear && matchesQuery;
+      return matchesQuery;
     });
-  }, [pubs, q, typeFilter, yearFilter]);
+  }, [totalFiltered, q]);
 
   const resetAll = () => {
     setQ("");
@@ -127,9 +167,15 @@ export default function PublicationPage() {
       return;
     }
 
+    const yr = Number(form.year);
+    if (Number.isNaN(yr)) {
+      alert("Year must be a valid number.");
+      return;
+    }
+
     const payload = {
       ...form,
-      year: Number(form.year),
+      year: yr,
     };
 
     if (editingId) {
@@ -160,7 +206,7 @@ export default function PublicationPage() {
   }
 
   function onDelete(id) {
-    if (!confirm("Delete this publication?")) return;
+    if (!window.confirm("Delete this publication?")) return;
     setPubs((prev) => prev.filter((p) => p.id !== id));
   }
 
@@ -227,6 +273,22 @@ export default function PublicationPage() {
               ))}
             </div>
 
+            <div className="pill-row" style={{ marginTop: 10 }}>
+              {["All", "Journal", "Conference", "Book"].map((t) => (
+                <div
+                  key={`${t}-count`}
+                  style={{
+                    fontSize: "12px",
+                    color: "#5b7088",
+                    padding: "0 6px",
+                    minWidth: "70px",
+                  }}
+                >
+                  {t}: {typeCounts[t]}
+                </div>
+              ))}
+            </div>
+
             <div className="divider" />
 
             <h3>FILTER BY YEAR</h3>
@@ -237,7 +299,7 @@ export default function PublicationPage() {
                 type="button"
               >
                 <span>All years</span>
-                <span className="count">{pubs.length}</span>
+                <span className="count">{yearCounts.allYears}</span>
               </button>
 
               {years.map((y) => (
@@ -248,7 +310,7 @@ export default function PublicationPage() {
                   type="button"
                 >
                   <span>{y}</span>
-                  <span className="count">{pubs.filter((p) => p.year === y).length}</span>
+                  <span className="count">{yearCounts.byYear[y] || 0}</span>
                 </button>
               ))}
             </div>
@@ -264,7 +326,7 @@ export default function PublicationPage() {
             </div>
             <div className="stat">
               <div className="stat-label">TOTAL</div>
-              <div className="stat-value">{pubs.length}</div>
+              <div className="stat-value">{totalFiltered.length}</div>
             </div>
           </div>
 

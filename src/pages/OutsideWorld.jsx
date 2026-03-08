@@ -1,19 +1,27 @@
 import { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import "./OutsideWorld.css";
 
 function OutsideWorld() {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
- const subHeadings = [
-  { title: "Invited Talks", subtitle: "Speeches & Sessions" },
-  { title: "Workshops", subtitle: "Training & Hands-on" },
-  { title: "International Collaboration", subtitle: "Collaborations & Work" },
-  { title: "Guest Lectures", subtitle: "Lectures & Interaction" },
-];
+  const subHeadings = [
+    { title: "Invited Talks", subtitle: "Speeches & Sessions", route: "/invited-talks" },
+    { title: "Workshops", subtitle: "Training & Hands-on", route: "/workshops" },
+    {
+      title: "International Collaboration",
+      subtitle: "Collaborations & Work",
+      route: "/international-collaboration",
+    },
+    { title: "Guest Lectures", subtitle: "Lectures & Interaction", route: "/guest-lectures" },
+    { title: "Board of Studies", subtitle: "Research Publications" },
+    { title: "DC", subtitle: "Research Publications", route: "/dc" },
+  ];
+
   const headingTitles = subHeadings.map((x) => x.title);
 
-  // ✅ Load from localStorage
   const initialData = () => {
     const saved = JSON.parse(localStorage.getItem("outsideData")) || {};
     const initialized = {};
@@ -25,33 +33,37 @@ function OutsideWorld() {
 
   const [data, setData] = useState(initialData);
   const [input, setInput] = useState({});
-  const [active, setActive] = useState(null); // ✅ which card opened
+  const [active, setActive] = useState(null);
 
-  // ✅ Save automatically
   useEffect(() => {
     localStorage.setItem("outsideData", JSON.stringify(data));
   }, [data]);
 
-  // ✅ Add (latest first)
   const handleAdd = (sub) => {
     const value = (input[sub] || "").trim();
     if (!value) return;
 
     setData({
       ...data,
-      [sub]: [value, ...data[sub]],
+      [sub]: [value, ...(data[sub] || [])],
     });
 
     setInput({ ...input, [sub]: "" });
   };
 
-  // ✅ Delete
   const handleDelete = (sub, index) => {
-    const updated = data[sub].filter((_, i) => i !== index);
+    const updated = (data[sub] || []).filter((_, i) => i !== index);
     setData({ ...data, [sub]: updated });
   };
 
-  // ✅ CARD VIEW (like screenshot)
+  const handleCardClick = (item) => {
+    if (item.route) {
+      navigate(item.route);
+      return;
+    }
+    setActive(item.title);
+  };
+
   if (!active) {
     return (
       <div className="outside-page">
@@ -62,10 +74,10 @@ function OutsideWorld() {
             <div
               key={item.title}
               className="outside-dashboard-card"
-              onClick={() => setActive(item.title)}
+              onClick={() => handleCardClick(item)}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && setActive(item.title)}
+              onKeyDown={(e) => e.key === "Enter" && handleCardClick(item)}
             >
               <h3 className="dash-title">{item.title}</h3>
               <p className="dash-subtitle">{item.subtitle}</p>
@@ -76,7 +88,6 @@ function OutsideWorld() {
     );
   }
 
-  // ✅ DETAIL VIEW (when card clicked)
   return (
     <div className="outside-page">
       <div className="outside-header-row">
@@ -88,11 +99,11 @@ function OutsideWorld() {
 
       <div className="outside-detail-card">
         <ul className="detail-list">
-          {data[active]?.length === 0 && (
+          {(data[active] || []).length === 0 && (
             <li className="empty-text">No content yet</li>
           )}
 
-          {data[active]?.map((item, idx) => (
+          {(data[active] || []).map((item, idx) => (
             <li className="detail-item" key={idx}>
               <span className="detail-text">{item}</span>
 

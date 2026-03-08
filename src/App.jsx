@@ -15,20 +15,16 @@ import OutsideWorld from "./pages/OutsideWorld";
 import NetworkIncharge from "./pages/NetworkIncharge";
 import AudioIncharge from "./pages/AudioIncharge";
 import InvitedTalks from "./pages/InvitedTalks";
-
-/* ✅ NEW IMPORTS */
 import AsCoordinator from "./pages/AsCoordinator";
 import PdpResource from "./pages/PdpResource";
-
-/* ✅ NEW PAGES (SAME TEMPLATE STYLE) */
 import Pg from "./pages/Pg";
 import Itec from "./pages/Itec";
-import Itp from "./pages/Itp"; // ✅ ADD THIS
+import Itp from "./pages/Itp";
 import HostInstitution from "./pages/HostInstitution";
 import Workshops from "./pages/Workshops";
 import InternationalCollaboration from "./pages/InternationalCollaboration";
 import GuestLectures from "./pages/GuestLectures";
-
+import Dc from "./pages/Dc";
 import "./App.css";
 
 function App() {
@@ -43,19 +39,16 @@ function App() {
         <Route path="/head" element={<Head />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Course Main Page */}
         <Route path="/course" element={<CoursePage />} />
         <Route path="/course/pdp" element={<CoursePage />} />
 
-        {/* ✅ EXISTING */}
         <Route path="/as-coordinator" element={<AsCoordinator />} />
         <Route path="/pdp-resource" element={<PdpResource />} />
         <Route path="/invited-talks" element={<InvitedTalks />} />
 
-        {/* ✅ NEW ROUTES */}
         <Route path="/pg" element={<Pg />} />
         <Route path="/itec" element={<Itec />} />
-        <Route path="/itp" element={<Itp />} /> {/* ✅ ADD THIS */}
+        <Route path="/itp" element={<Itp />} />
         <Route path="/host-institution" element={<HostInstitution />} />
         <Route path="/workshops" element={<Workshops />} />
         <Route
@@ -63,6 +56,7 @@ function App() {
           element={<InternationalCollaboration />}
         />
         <Route path="/guest-lectures" element={<GuestLectures />} />
+        <Route path="/dc" element={<Dc />} />
 
         <Route path="/award" element={<AwardPage />} />
         <Route path="/publication" element={<PublicationPage />} />

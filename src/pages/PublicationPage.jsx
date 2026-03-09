@@ -1,48 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import "./PublicationPage.css";
-
-/* SAMPLE DATA */
-const SAMPLE = [
-  {
-    id: 1,
-    type: "Journal",
-    year: 2012,
-    title:
-      "Implementation of Threshold Detection Technique for extraction of composite signals against ambient noises in underwater communication using Empirical Mode Decomposition",
-    authors: "S. Sakthivel Murugan, V. Natarajan",
-    venue: "Fluctuation and Noise Letters, Vol.11, No.4 (2012)",
-    doi: "10.1142/S0219477512500230",
-  },
-  {
-    id: 2,
-    type: "Conference",
-    year: 2015,
-    title:
-      "Design and Prototype Implementation of an Automatic Energy Harvesting system for Low power Devices from Vibration of Vehicles",
-    authors: "S. Sakthivel Murugan, Ann Agneta Chandru",
-    venue: "12th IEEE INDICON 2015, New Delhi (Best Paper Award)",
-    doi: "",
-  },
-  {
-    id: 3,
-    type: "Book",
-    year: 2018,
-    title: "Communication Theory",
-    authors: "—",
-    venue: "McGraw Hill (2018)",
-    doi: "",
-  },
-  {
-    id: 4,
-    type: "Journal",
-    year: 2011,
-    title:
-      "Noise Model Analysis and Estimation of Effect due to Wind Driven Ambient Noise in Shallow Water",
-    authors: "S. Sakthivel Murugan, V. Natarajan, R. Rajesh Kumar",
-    venue: "International Journal of Oceanography (2011)",
-    doi: "10.1155/2011/123456",
-  },
-];
+import { PUBLICATIONS } from "../data/publications";
 
 function doiUrl(doi) {
   if (!doi) return "";
@@ -57,7 +15,7 @@ function badgeClass(type) {
 }
 
 export default function PublicationPage() {
-  const [pubs, setPubs] = useState(SAMPLE);
+  const [pubs, setPubs] = useState(PUBLICATIONS);
 
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -79,8 +37,6 @@ export default function PublicationPage() {
   const years = useMemo(() => {
     return Array.from(new Set(pubs.map((p) => p.year))).sort((a, b) => b - a);
   }, [pubs]);
-
-  /* ---------- COUNTS FOR SIDEBAR ---------- */
 
   const typeCounts = useMemo(() => {
     const base =
@@ -113,7 +69,6 @@ export default function PublicationPage() {
     };
   }, [pubs, years, typeFilter]);
 
-  /* ---------- TOTAL = TYPE + YEAR FILTER ONLY ---------- */
   const totalFiltered = useMemo(() => {
     return pubs.filter((p) => {
       const matchesType = typeFilter === "All" ? true : p.type === typeFilter;
@@ -124,7 +79,6 @@ export default function PublicationPage() {
     });
   }, [pubs, typeFilter, yearFilter]);
 
-  /* ---------- SHOWING = TYPE + YEAR + SEARCH ---------- */
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
 
@@ -230,7 +184,6 @@ export default function PublicationPage() {
 
   return (
     <div className="pub-page">
-      {/* TOP HEADER */}
       <div className="pub-topbar">
         <div className="pub-topbar-left">
           <h1>Publications</h1>
@@ -256,7 +209,6 @@ export default function PublicationPage() {
       </div>
 
       <div className="pub-layout">
-        {/* SIDEBAR */}
         <aside className="pub-sidebar">
           <div className="card">
             <h3>FILTER BY TYPE</h3>
@@ -317,7 +269,6 @@ export default function PublicationPage() {
           </div>
         </aside>
 
-        {/* MAIN */}
         <main className="pub-main">
           <div className="stats-row">
             <div className="stat">
@@ -380,7 +331,6 @@ export default function PublicationPage() {
             {filtered.length === 0 && <div className="empty">No publications found.</div>}
           </div>
 
-          {/* ADD / EDIT FORM AT BOTTOM */}
           <div className="pub-form" ref={formRef}>
             <h2>{editingId ? "Edit Publication" : "Add Publication"}</h2>
 

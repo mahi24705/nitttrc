@@ -1,39 +1,43 @@
-import { useEffect, useMemo, useState, useContext } from "react";
+import { useMemo, useState, useContext } from "react";
 import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
-const API_BASE = "http://localhost:8080/api/coordinator-programmes";
+const INITIAL_DATA = [
+  { id: 1, rawDate: "23.03.2026", date: "MAR 2026", code: "EC-27-405", title: "Unmanned and Manned Underwater robots and its applications", duration: "23.03.2026 - 27.03.2026", mode: "Hybrid" },
+  { id: 2, rawDate: "23.02.2026", date: "FEB 2026", code: "EC-24-377", title: "Industrial IoT 4.0 and Beyond Empowering Smart Industries", duration: "23.02.2026 - 27.02.2026", mode: "Contact" },
+  { id: 3, rawDate: "27.01.2026", date: "JAN 2026", code: "EC-22-344", title: "Role of wireless Sensor Networks", duration: "27.01.2026 - 31.01.2026", mode: "Hybrid" },
+  { id: 4, rawDate: "15.12.2025", date: "DEC 2025", code: "NULL", title: "Technical Transformation from I to E (Innovator to Entrepreneur through Incubation) in an Engineering Perspective ()", duration: "15.12.2025 - 19.12.2025", mode: "Contact" },
+  { id: 5, rawDate: "01.12.2025", date: "DEC 2025", code: "SP-20", title: "Quality 3P (Paper, patent and Projects ) for an academician from Engineering Perspective", duration: "01.12.2025 - 05.12.2025", mode: "Hybrid" },
+  { id: 6, rawDate: "17.11.2025", date: "NOV 2025", code: "EC-20-281", title: "Hands on Training: Drafting and review insights on Technical Proposals for funding", duration: "17.11.2025 - 21.11.2025", mode: "Hybrid" },
+  { id: 7, rawDate: "13.10.2025", date: "OCT 2025", code: "EC-17-246", title: "Enabling Modern Communication through Radar and Satellites", duration: "13.10.2025 - 17.10.2025", mode: "Online" },
+  { id: 8, rawDate: "15.09.2025", date: "SEP 2025", code: "EC-02-11", title: "Imaging Sensors: Data Interpretation with ML and DL", duration: "15.09.2025 - 19.09.2025", mode: "Online" },
+  { id: 9, rawDate: "18.08.2025", date: "AUG 2025", code: "EC-12-177", title: "Underwater Sensors and its Applications", duration: "18.08.2025 - 22.08.2025", mode: "Online" },
+  { id: 10, rawDate: "24.03.2025", date: "MAR 2025", code: "ED-67-299", title: "Core and Interdisciplinary Research Methodology and IPR", duration: "24.03.2025 - 28.03.2025", mode: "Online" },
+  { id: 11, rawDate: "27.01.2025", date: "JAN 2025", code: "ED-55-256", title: "Effective Funding and Consultancy Proposal Writing", duration: "27.01.2025 - 31.01.2025", mode: "Contact" },
+  { id: 12, rawDate: "16.12.2024", date: "DEC 2024", code: "EC-09-229", title: "Communication systems and Its application in Underwater", duration: "16.12.2024 - 20.12.2024", mode: "Online" },
+  { id: 13, rawDate: "25.11.2024", date: "NOV 2024", code: "EC-06-204", title: "Role of Underwater sensors in Ocean technology", duration: "25.11.2024 - 29.11.2024", mode: "Online" },
+];
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
 
-/* ✅ Convert DD.MM.YYYY -> "MMM YYYY" (ex: 30.12.2024 -> "DEC 2024") */
+/* Convert DD.MM.YYYY -> "MMM YYYY" (ex: 30.12.2024 -> "DEC 2024") */
 function monthYearFromDDMMYYYY(ddmmyyyy) {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
   if (!m) return "—";
   const [, , mm, yy] = m;
 
   const months = [
-    "JAN",
-    "FEB",
-    "MAR",
-    "APR",
-    "MAY",
-    "JUN",
-    "JUL",
-    "AUG",
-    "SEP",
-    "OCT",
-    "NOV",
-    "DEC",
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
   ];
 
   const idx = Number(mm) - 1;
   return `${months[idx] || "—"} ${yy}`;
 }
 
-/* ✅ Sort key for "MMM YYYY" */
+/* Sort key for "MMM YYYY" */
 function monthYearKey(monYear) {
   const m = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
     (monYear || "").trim().toUpperCase()
@@ -41,18 +45,9 @@ function monthYearKey(monYear) {
   if (!m) return 0;
 
   const months = {
-    JAN: "01",
-    FEB: "02",
-    MAR: "03",
-    APR: "04",
-    MAY: "05",
-    JUN: "06",
-    JUL: "07",
-    AUG: "08",
-    SEP: "09",
-    OCT: "10",
-    NOV: "11",
-    DEC: "12",
+    JAN: "01", FEB: "02", MAR: "03", APR: "04",
+    MAY: "05", JUN: "06", JUL: "07", AUG: "08",
+    SEP: "09", OCT: "10", NOV: "11", DEC: "12",
   };
 
   const mon = months[m[1]] || "00";
@@ -67,9 +62,7 @@ function pillClass(mode) {
   return "pill other";
 }
 
-/* ---------- Date helpers (UI <-> DB) ---------- */
-
-/** DD.MM.YYYY -> YYYY-MM-DD */
+/* ---------- Date helpers ---------- */
 function ddmmyyyyToIso(ddmmyyyy) {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((ddmmyyyy || "").trim());
   if (!m) return "";
@@ -77,18 +70,6 @@ function ddmmyyyyToIso(ddmmyyyy) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/** YYYY-MM-DD -> DD.MM.YYYY */
-function isoToDDMMYYYY(iso) {
-  if (!iso) return "";
-  const s = String(iso);
-  const pure = s.length >= 10 ? s.slice(0, 10) : s;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(pure);
-  if (!m) return "";
-  const [, yyyy, mm, dd] = m;
-  return `${dd}.${mm}.${yyyy}`;
-}
-
-/** ✅ Validate a real calendar date (rejects 31.02.2004 etc.) */
 function isValidIsoDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim());
   if (!m) return false;
@@ -103,45 +84,24 @@ function isValidIsoDate(iso) {
   );
 }
 
-/** ✅ Accepts BOTH:
- *  - "31.12.2025"
- *  - "JAN 2025"
- * Returns:
- *  displayDateIso: "YYYY-MM-DD"
- *  uiDate: always "DD.MM.YYYY" (for storing in rawDate / input)
- */
 function parseDateInputToIsoAndUi(dateInput) {
   const s = (dateInput || "").trim().toUpperCase();
 
-  // DD.MM.YYYY
   if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
     const iso = ddmmyyyyToIso(s);
     if (!iso || !isValidIsoDate(iso)) return { displayDateIso: "", uiDate: "" };
     return { displayDateIso: iso, uiDate: s };
   }
 
-  // "JAN 2025"
-  const monYear =
-    /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
+  const monYear = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
   if (monYear) {
     const monMap = {
-      JAN: "01",
-      FEB: "02",
-      MAR: "03",
-      APR: "04",
-      MAY: "05",
-      JUN: "06",
-      JUL: "07",
-      AUG: "08",
-      SEP: "09",
-      OCT: "10",
-      NOV: "11",
-      DEC: "12",
+      JAN: "01", FEB: "02", MAR: "03", APR: "04",
+      MAY: "05", JUN: "06", JUL: "07", AUG: "08",
+      SEP: "09", OCT: "10", NOV: "11", DEC: "12",
     };
     const mm = monMap[monYear[1]];
     const yyyy = monYear[2];
-
-    // we store/display the date as 1st of that month
     const iso = `${yyyy}-${mm}-01`;
     const ui = `01.${mm}.${yyyy}`;
 
@@ -153,11 +113,7 @@ function parseDateInputToIsoAndUi(dateInput) {
 }
 
 function parseDuration(duration) {
-  // Expected: "08.12.2025 - 12.12.2025"
-  const parts = (duration || "")
-    .replace(/[–—]/g, "-")
-    .split("-")
-    .map((s) => s.trim());
+  const parts = (duration || "").replace(/[–—]/g, "-").split("-").map((s) => s.trim());
   return { startDD: parts[0] || "", endDD: parts[1] || "" };
 }
 
@@ -165,56 +121,17 @@ export default function AsCoordinator() {
   const { isAdmin } = useContext(AuthContext);
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]); // ✅ DB is the source now
-  const [loading, setLoading] = useState(true);
+  // Load initial hardcoded data directly
+  const [items, setItems] = useState(INITIAL_DATA); 
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
-    date: "", // ✅ DD.MM.YYYY OR "JAN 2025"
+    date: "", 
     code: "",
     title: "",
-    duration: "", // "DD.MM.YYYY - DD.MM.YYYY"
+    duration: "", 
     mode: "Contact",
   });
-
-  /* ✅ Load from DB on page load */
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(API_BASE);
-        if (!res.ok) throw new Error("Failed to load coordinator programmes");
-        const data = await res.json();
-
-        const mapped = (data || []).map((row) => {
-          const rawDate = isoToDDMMYYYY(row.displayDate);
-          const start = isoToDDMMYYYY(row.startDate);
-          const end = isoToDDMMYYYY(row.endDate);
-
-          return {
-            id: row.id,
-            rawDate, // DD.MM.YYYY (always)
-            date: monthYearFromDDMMYYYY(rawDate), // group label
-            code: row.code || "",
-            title: row.programme || "",
-            duration: `${start} - ${end}`.trim(),
-            mode: row.mode || "Contact",
-          };
-        });
-
-        // newest first
-        mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
-        setItems(mapped);
-      } catch (e) {
-        console.error(e);
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
 
   const filteredItems = useMemo(() => {
     const query = normalize(q);
@@ -230,7 +147,7 @@ export default function AsCoordinator() {
   const grouped = useMemo(() => {
     const map = new Map();
     for (const it of filteredItems) {
-      const key = it.date || "—"; // month-year
+      const key = it.date || "—"; 
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(it);
     }
@@ -250,11 +167,11 @@ export default function AsCoordinator() {
     setForm({ date: "", code: "", title: "", duration: "", mode: "Contact" });
   }
 
-  /* ✅ ADD or UPDATE to DB */
-  async function onSubmit(e) {
+  /* ADD or UPDATE using local state */
+  function onSubmit(e) {
     e.preventDefault();
 
-    const dateInput = form.date.trim(); // DD.MM.YYYY or JAN 2025
+    const dateInput = form.date.trim(); 
     const code = form.code.trim();
     const title = form.title.trim();
     const duration = form.duration.trim();
@@ -265,7 +182,6 @@ export default function AsCoordinator() {
       return;
     }
 
-    // ✅ Parse date input same like PdpResource.jsx
     const { displayDateIso, uiDate } = parseDateInputToIsoAndUi(dateInput);
     if (!displayDateIso) {
       alert('Date must be "DD.MM.YYYY" (example: 31.12.2025) OR "JAN 2025".');
@@ -281,58 +197,25 @@ export default function AsCoordinator() {
       return;
     }
 
-    const payload = {
-      displayDate: displayDateIso,
+    const rawDateDD = uiDate || dateInput;
+
+    const uiItem = {
+      id: editingId ? editingId : Date.now(), // Generate local ID if new
+      rawDate: rawDateDD,
+      date: monthYearFromDDMMYYYY(rawDateDD),
       code,
-      programme: title,
-      startDate: startIso,
-      endDate: endIso,
+      title,
+      duration,
       mode,
     };
 
-    try {
-      let res;
-      if (editingId) {
-        res = await fetch(`${API_BASE}/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        res = await fetch(API_BASE, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) throw new Error("Save failed");
-      const saved = await res.json();
-
-      // ✅ store rawDate as DD.MM.YYYY (even if user typed JAN 2025)
-      const rawDateDD = uiDate || dateInput;
-
-      const uiItem = {
-        id: saved.id,
-        rawDate: rawDateDD,
-        date: monthYearFromDDMMYYYY(rawDateDD),
-        code,
-        title,
-        duration,
-        mode,
-      };
-
-      if (editingId) {
-        setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
-      } else {
-        setItems((prev) => [uiItem, ...prev]);
-      }
-
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      alert("Save failed. Check backend running + endpoint.");
+    if (editingId) {
+      setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
+    } else {
+      setItems((prev) => [uiItem, ...prev]);
     }
+
+    resetForm();
   }
 
   function onEdit(item) {
@@ -347,18 +230,10 @@ export default function AsCoordinator() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  /* ✅ DELETE from DB */
-  async function onDelete(id) {
+  /* DELETE from local state */
+  function onDelete(id) {
     if (!confirm("Delete this programme?")) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      setItems((prev) => prev.filter((it) => it.id !== id));
-    } catch (e) {
-      console.error(e);
-      alert("Delete failed. Check backend.");
-    }
+    setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
   function resetAll() {
@@ -390,9 +265,7 @@ export default function AsCoordinator() {
       </header>
 
       <div className="content">
-        {loading ? (
-          <div className="empty">Loading from database...</div>
-        ) : grouped.length === 0 ? (
+        {grouped.length === 0 ? (
           <div className="empty">No results found.</div>
         ) : (
           grouped.map(([date, arr]) => (
@@ -513,7 +386,7 @@ export default function AsCoordinator() {
         </div>
       )}
 
-      <footer className="footer">Now using database (MySQL) via Spring Boot API.</footer>
+      <footer className="footer">Running on static local data (No Database Connected).</footer>
     </div>
   );
 }

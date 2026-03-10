@@ -23,7 +23,7 @@ body{
 }
 
 .page{
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 28px auto 60px;
   padding: 0 18px;
 }
@@ -41,8 +41,17 @@ body{
   color: #fff;
 }
 
-.hero h1{ margin:0; font-size: 26px; letter-spacing:.2px; }
-.hero p{ margin: 6px 0 0; opacity:.9; font-size: 13px; }
+.hero h1{
+  margin:0;
+  font-size: 26px;
+  letter-spacing:.2px;
+}
+
+.hero p{
+  margin: 6px 0 0;
+  opacity:.9;
+  font-size: 13px;
+}
 
 .hero-right{
   display:flex;
@@ -60,53 +69,79 @@ body{
   box-shadow: 0 6px 14px rgba(0,0,0,.14);
 }
 
+/* ===== PANELS ===== */
 .panel{
   background: var(--card);
   border-radius: 18px;
   box-shadow: var(--shadow);
   border: 1px solid var(--line);
-  padding: 16px 16px 14px;
-  position: sticky;
-  top: 14px;
+  padding: 20px 22px 18px;
+  width: 100%;
+}
+
+/* ✅ THIS IS THE MAIN FIX */
+.bottom-form{
+  margin-top: 20px;
+  width: 100%;
+  max-width: 100%;
+  display: block;
 }
 
 .panel h2{
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   font-size: 18px;
 }
 
+/* ===== FORM ===== */
 .form{
-  display:flex;
-  flex-direction:column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  width: 100%;
 }
 
-label{
+.form label{
   display:flex;
   flex-direction:column;
   gap: 6px;
   font-size: 13px;
   color: var(--muted);
+  width: 100%;
 }
 
-input, select{
+.form input,
+.form select,
+.form textarea,
+input,
+select,
+textarea{
+  width: 100%;
   padding: 11px 12px;
   border-radius: 12px;
   border: 1px solid var(--line);
   outline:none;
   font-size: 14px;
   background:#fff;
+  font-family: inherit;
 }
 
-input:focus, select:focus{
+input:focus,
+select:focus,
+textarea:focus{
   border-color: rgba(15,76,129,.5);
   box-shadow: 0 0 0 4px rgba(15,76,129,.12);
+}
+
+textarea{
+  resize: vertical;
+  min-height: 120px;
 }
 
 .btns{
   display:flex;
   gap:10px;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 
 button{
@@ -134,6 +169,7 @@ button{
   color: var(--muted);
 }
 
+/* ===== CONTENT ===== */
 .content{
   display:flex;
   flex-direction:column;
@@ -145,8 +181,6 @@ button{
   border-radius: 18px;
   box-shadow: var(--shadow);
   border: 1px solid var(--line);
-
-  /* ✅ IMPORTANT: do NOT clip the table */
   overflow: visible;
 }
 
@@ -157,13 +191,14 @@ button{
   padding: 14px 18px;
   background: var(--soft);
   border-bottom: 1px solid var(--line);
-
-  /* keep header corners nice */
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
 }
 
-.group-date{ font-weight: 900; color: var(--primary); }
+.group-date{
+  font-weight: 900;
+  color: var(--primary);
+}
 
 .group-count{
   font-size: 12px;
@@ -175,14 +210,12 @@ button{
   border-radius: 999px;
 }
 
-/* ✅ Make table scroll horizontally when needed */
 .table{
   width:100%;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-/* ✅ Keep one-row layout always */
 .table .tr{
   display:grid;
   grid-template-columns: 70px 140px minmax(320px, 1fr) 220px 120px 140px 240px;
@@ -190,12 +223,12 @@ button{
   padding: 12px 18px;
   border-bottom: 1px solid var(--line);
   align-items:center;
-
-  /* ✅ Force min width so actions never get clipped */
   min-width: 1100px;
 }
 
-.table .tr:last-child{ border-bottom:none; }
+.table .tr:last-child{
+  border-bottom:none;
+}
 
 .table .tr.head{
   background: #f8fafc;
@@ -206,37 +239,37 @@ button{
   letter-spacing:.4px;
 }
 
-/* ✅ Keep all columns in one line by default */
 .table .tr > div{
   white-space: nowrap;
 }
 
-/* ✅ ONLY TITLE should wrap (fix cut title issue) */
 .table .tr > .programme{
   white-space: normal !important;
   overflow: visible;
   text-overflow: unset;
-
   word-break: break-word;
   overflow-wrap: anywhere;
   line-height: 1.35;
 }
 
-/* Base title style */
 .programme{
   font-weight: 700;
   font-size: 15px;
   color: #0b1b34;
 }
 
-.table .tr:not(.head):hover{ background: #fbfdff; }
+.table .tr:not(.head):hover{
+  background: #fbfdff;
+}
 
 .code{
   font-weight: 900;
   color: var(--text);
 }
 
-.muted{ color: var(--muted); }
+.muted{
+  color: var(--muted);
+}
 
 .pill{
   display:inline-flex;
@@ -252,7 +285,6 @@ button{
 .pill.physical{ background: rgba(190,120,0,.12); color: #7a4c00; }
 .pill.other{ background: rgba(15,23,42,.06); color: var(--muted); }
 
-/* ✅ Actions stay in one line */
 .actions{
   display:flex;
   gap:10px;
@@ -296,11 +328,12 @@ button{
   font-size: 12px;
 }
 
-.bottom-form{
-  margin-top: 20px;
-}
-
-/* ✅ Responsive: keep SAME 7 columns, just allow scroll (do NOT stack) */
 @media (max-width: 980px){
-  .panel{ position: static; }
+  .panel{
+    position: static;
+  }
+
+  .page{
+    max-width: 100%;
+  }
 }

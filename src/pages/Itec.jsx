@@ -1,21 +1,36 @@
 // src/pages/Itec.jsx
-import { useEffect, useMemo, useState, useContext } from "react";
+import { useMemo, useState, useContext } from "react";
 import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
-const API_BASE = "http://localhost:8080/api/itec";
+const INITIAL_DATA = [
+  {
+    id: 1,
+    rawDate: "17.09.2025",
+    date: "SEP 2025",
+    code: "Null",
+    title: "Leveraging Drone Technology for Achieving Sustainable Development Goals (SDGs) and Promoting Entrepreneurship",
+    duration: "17.09.2025 - 30.09.2025",
+    mode: "Contact",
+    role: "Resource Person",
+  },
+  {
+    id: 2,
+    rawDate: "01.02.2025", // Used 01.02.2025 to group under FEB 2025
+    date: "FEB 2025",
+    code: "Null",
+    title: "Skill Development in Electronics for TVET Trainers and Planners",
+    duration: "09:30 am - 12:45 pm",
+    mode: "Contact",
+    role: "Resource Person",
+  }
+];
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
 }
 
-/** ✅ Convert date to "MMM YYYY"
- * supports:
- * - 31.12.2025
- * - 31-12-2025
- * - 31/12/2025
- * - 2025-12-31
- */
+/** ✅ Convert date to "MMM YYYY" */
 function monthYearFromAny(dateStr) {
   const s = (dateStr || "").trim();
 
@@ -24,20 +39,7 @@ function monthYearFromAny(dateStr) {
   if (m) {
     const mm = Number(m[2]);
     const yy = m[3];
-    const months = [
-      "JAN",
-      "FEB",
-      "MAR",
-      "APR",
-      "MAY",
-      "JUN",
-      "JUL",
-      "AUG",
-      "SEP",
-      "OCT",
-      "NOV",
-      "DEC",
-    ];
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     return `${months[mm - 1] || "—"} ${yy}`;
   }
 
@@ -46,20 +48,7 @@ function monthYearFromAny(dateStr) {
   if (m) {
     const yy = m[1];
     const mm = Number(m[2]);
-    const months = [
-      "JAN",
-      "FEB",
-      "MAR",
-      "APR",
-      "MAY",
-      "JUN",
-      "JUL",
-      "AUG",
-      "SEP",
-      "OCT",
-      "NOV",
-      "DEC",
-    ];
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     return `${months[mm - 1] || "—"} ${yy}`;
   }
 
@@ -78,18 +67,8 @@ function monthYearKey(monYear) {
   if (!m) return 0;
 
   const months = {
-    JAN: "01",
-    FEB: "02",
-    MAR: "03",
-    APR: "04",
-    MAY: "05",
-    JUN: "06",
-    JUL: "07",
-    AUG: "08",
-    SEP: "09",
-    OCT: "10",
-    NOV: "11",
-    DEC: "12",
+    JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+    JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
   };
 
   const mon = months[m[1]] || "00";
@@ -150,24 +129,12 @@ function parseDateInputToIsoAndUi(dateInput) {
     return { displayDateIso: iso, uiDate: s };
   }
 
-  const monYear = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
-    s
-  );
+  const monYear = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
 
   if (monYear) {
     const monMap = {
-      JAN: "01",
-      FEB: "02",
-      MAR: "03",
-      APR: "04",
-      MAY: "05",
-      JUN: "06",
-      JUL: "07",
-      AUG: "08",
-      SEP: "09",
-      OCT: "10",
-      NOV: "11",
-      DEC: "12",
+      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
     };
     const mm = monMap[monYear[1]];
     const yyyy = monYear[2];
@@ -216,10 +183,7 @@ function removeLeadingDate(text) {
 
 function splitRange(raw) {
   const s = (raw || "").trim().replace(/[–—]/g, "-");
-  const parts = s
-    .split("-")
-    .map((x) => x.trim())
-    .filter(Boolean);
+  const parts = s.split("-").map((x) => x.trim()).filter(Boolean);
 
   if (parts.length >= 2) {
     return { left: parts[0], right: parts.slice(1).join(" - ") };
@@ -228,13 +192,6 @@ function splitRange(raw) {
   return { left: "", right: "" };
 }
 
-/**
- * ✅ Duration formats allowed:
- * 1) 21.02.2025 - 22.02.2025
- * 2) 09:00 am - 12:30 pm
- * 3) 21.02.2025 09:00 am - 22.02.2025 12:30 pm
- * 4) 21.02.2025 09:00 am - 12:30 pm
- */
 function parseDurationFlexible(durationInput, displayDateIso) {
   const raw = (durationInput || "").trim();
   if (!raw) {
@@ -257,82 +214,45 @@ function parseDurationFlexible(durationInput, displayDateIso) {
   const leftRest = removeLeadingDate(left);
   const rightRest = removeLeadingDate(right);
 
-  // Case A: Date range (with or without times)
   if (leftDateDD) {
     const startIso = ddmmyyyyToIso(leftDateDD);
     if (!startIso || !isValidIsoDate(startIso)) {
-      return {
-        ok: false,
-        startIso: "",
-        endIso: "",
-        err: "Invalid start date in Duration.",
-      };
+      return { ok: false, startIso: "", endIso: "", err: "Invalid start date in Duration." };
     }
 
     let endIso = "";
     if (rightDateDD) {
       endIso = ddmmyyyyToIso(rightDateDD);
       if (!endIso || !isValidIsoDate(endIso)) {
-        return {
-          ok: false,
-          startIso: "",
-          endIso: "",
-          err: "Invalid end date in Duration.",
-        };
+        return { ok: false, startIso: "", endIso: "", err: "Invalid end date in Duration." };
       }
     } else {
       endIso = startIso;
     }
 
     if (leftRest && !isValidTimeToken(leftRest)) {
-      return {
-        ok: false,
-        startIso: "",
-        endIso: "",
-        err: 'Invalid start time. Use like "09:00 am".',
-      };
+      return { ok: false, startIso: "", endIso: "", err: 'Invalid start time. Use like "09:00 am".' };
     }
 
     if (rightRest && !isValidTimeToken(rightRest)) {
-      return {
-        ok: false,
-        startIso: "",
-        endIso: "",
-        err: 'Invalid end time. Use like "12:30 pm".',
-      };
+      return { ok: false, startIso: "", endIso: "", err: 'Invalid end time. Use like "12:30 pm".' };
     }
 
     return { ok: true, startIso, endIso, err: "" };
   }
 
-  // Case B: Time only range
   const t1 = normalizeTimeToken(left);
   const t2 = normalizeTimeToken(right);
 
   if (!isValidTimeToken(t1) || !isValidTimeToken(t2)) {
-    return {
-      ok: false,
-      startIso: "",
-      endIso: "",
-      err: 'Time range must be like "09:00 am - 12:30 pm".',
-    };
+    return { ok: false, startIso: "", endIso: "", err: 'Time range must be like "09:00 am - 12:30 pm".' };
   }
 
   if (!displayDateIso || !isValidIsoDate(displayDateIso)) {
-    return {
-      ok: false,
-      startIso: "",
-      endIso: "",
-      err: 'For time-only duration, the main "Date" field must be valid.',
-    };
+    return { ok: false, startIso: "", endIso: "", err: 'For time-only duration, the main "Date" field must be valid.' };
   }
 
-  return {
-    ok: true,
-    startIso: displayDateIso,
-    endIso: displayDateIso,
-    err: "",
-  };
+  return { ok: true, startIso: displayDateIso, endIso: displayDateIso, err: "" };
 }
 
 /* ===================== END Duration ===================== */
@@ -341,11 +261,10 @@ export default function Itec() {
   const { isAdmin } = useContext(AuthContext);
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errMsg, setErrMsg] = useState("");
-
+  // Local state initialized with raw data
+  const [items, setItems] = useState(INITIAL_DATA);
   const [editingId, setEditingId] = useState(null);
+
   const [form, setForm] = useState({
     date: "",
     code: "",
@@ -354,49 +273,6 @@ export default function Itec() {
     mode: "Contact",
     role: "Coordinator",
   });
-
-  async function loadFromDb() {
-    try {
-      setLoading(true);
-      setErrMsg("");
-
-      const res = await fetch(API_BASE);
-      if (!res.ok) throw new Error("Failed to load ITEC programmes");
-
-      const data = await res.json();
-
-      const mapped = (data || []).map((row) => {
-        const rawDate = isoToDDMMYYYY(row.displayDate);
-        const start = isoToDDMMYYYY(row.startDate);
-        const end = isoToDDMMYYYY(row.endDate);
-
-        return {
-          id: row.id,
-          rawDate,
-          date: monthYearFromDDMMYYYY(rawDate),
-          code: row.code || "",
-          title: row.programme || "",
-          duration:
-            start && end ? `${start} - ${end}` : start || end || "—",
-          mode: row.mode || "Contact",
-          role: row.role || "Coordinator",
-        };
-      });
-
-      mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
-      setItems(mapped);
-    } catch (e) {
-      console.error(e);
-      setItems([]);
-      setErrMsg("Could not load ITEC data. Check backend + CORS + endpoint.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadFromDb();
-  }, []);
 
   const filteredItems = useMemo(() => {
     const query = normalize(q);
@@ -442,10 +318,14 @@ export default function Itec() {
   function resetAll() {
     setQ("");
     resetForm();
-    setErrMsg("");
   }
 
-  async function onSubmit(e) {
+  function reloadData() {
+    setItems(INITIAL_DATA);
+    setQ("");
+  }
+
+  function onSubmit(e) {
     e.preventDefault();
 
     const dateInput = form.date.trim();
@@ -453,8 +333,8 @@ export default function Itec() {
     const title = form.title.trim();
     const duration = form.duration.trim();
 
-    if (!dateInput || !code || !title) {
-      alert("Please fill Date, Code, and Programme.");
+    if (!dateInput || !title) {
+      alert("Please fill Date and Programme Title.");
       return;
     }
 
@@ -470,68 +350,32 @@ export default function Itec() {
       return;
     }
 
-    const payload = {
-      displayDate: displayDateIso,
-      programmeDate: uiDate || dateInput,
-      code,
-      programme: title,
-      startDate: dur.startIso,
-      endDate: dur.endIso,
+    const rawDateDD = uiDate || dateInput;
+    const uiItem = {
+      id: editingId ? editingId : Date.now(),
+      rawDate: rawDateDD,
+      date: monthYearFromDDMMYYYY(rawDateDD),
+      code: code || "Null",
+      title,
+      duration,
       mode: form.mode,
       role: form.role,
     };
 
-    try {
-      let res;
-      if (editingId) {
-        res = await fetch(`${API_BASE}/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        res = await fetch(API_BASE, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) throw new Error("Save failed");
-      const saved = await res.json();
-
-      const rawDateDD = uiDate || dateInput;
-      const uiItem = {
-        id: saved.id,
-        rawDate: rawDateDD,
-        date: monthYearFromDDMMYYYY(rawDateDD),
-        code,
-        title,
-        duration,
-        mode: form.mode,
-        role: form.role,
-      };
-
-      if (editingId) {
-        setItems((prev) =>
-          prev.map((it) => (it.id === editingId ? uiItem : it))
-        );
-      } else {
-        setItems((prev) => [uiItem, ...prev]);
-      }
-
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      alert("Save failed. Check backend running + endpoint.");
+    if (editingId) {
+      setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
+    } else {
+      setItems((prev) => [uiItem, ...prev]);
     }
+
+    resetForm();
   }
 
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
       date: item.rawDate || "",
-      code: item.code || "",
+      code: item.code === "Null" || item.code === "—" ? "" : item.code,
       title: item.title || "",
       duration: item.duration === "—" ? "" : item.duration,
       mode: item.mode || "Contact",
@@ -540,18 +384,9 @@ export default function Itec() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function onDelete(id) {
+  function onDelete(id) {
     if (!window.confirm("Delete this programme?")) return;
-
-    try {
-      setErrMsg("");
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      setItems((prev) => prev.filter((it) => it.id !== id));
-    } catch (e) {
-      console.error(e);
-      alert(e.message);
-    }
+    setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
   return (
@@ -576,22 +411,14 @@ export default function Itec() {
             </button>
           )}
 
-          <button className="ghost" onClick={loadFromDb} title="Reload from DB">
+          <button className="ghost" onClick={reloadData} title="Reload Data">
             Refresh
           </button>
         </div>
       </header>
 
-      {errMsg && (
-        <div className="empty" style={{ marginBottom: 12 }}>
-          {errMsg}
-        </div>
-      )}
-
       <div className="content">
-        {loading ? (
-          <div className="empty">Loading from database...</div>
-        ) : grouped.length === 0 ? (
+        {grouped.length === 0 ? (
           <div className="empty">No results found.</div>
         ) : (
           grouped.map(([date, arr]) => (
@@ -626,7 +453,7 @@ export default function Itec() {
                     <div className="muted">{it.role}</div>
 
                     <div className="actions">
-                      {isAdmin && (
+                      {isAdmin ? (
                         <>
                           <button className="edit" onClick={() => onEdit(it)}>
                             Edit
@@ -635,6 +462,8 @@ export default function Itec() {
                             Delete
                           </button>
                         </>
+                      ) : (
+                        <span className="muted">—</span>
                       )}
                     </div>
                   </div>
@@ -664,7 +493,7 @@ export default function Itec() {
               <input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value })}
-                placeholder="EC-20-281"
+                placeholder="Code (optional)"
               />
             </label>
 
@@ -730,7 +559,7 @@ export default function Itec() {
       )}
 
       <footer className="footer">
-        Now using database (MySQL) via Spring Boot API.
+        Running on static local data (No Database Connected).
       </footer>
     </div>
   );

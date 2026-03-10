@@ -3,13 +3,13 @@ import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
 const RAW_TALKS = [
+  // --- NEW DATA (2024 - 2026) ---
   {
     id: 1,
     month: "OCT 2024",
     date: "26.10.2024",
-    title: "Underwater Sensors and Its Applications",
-    venue:
-      'International Conference "ASIANComNet 2024 – 2024 Asian Conference on Communication and Networks"',
+    title: "Underwater Sensors and Its Applications (Keynote Speaker)",
+    venue: 'International Conference "ASIANComNet 2024 – 2024 Asian Conference on Communication and Networks"',
     place: "Thailand",
   },
   {
@@ -17,8 +17,7 @@ const RAW_TALKS = [
     month: "OCT 2024",
     date: "26.10.2024",
     title: "Session Chair in ASIANComNet 2024",
-    venue:
-      'International Conference "ASIANComNet 2024 – 2024 Asian Conference on Communication and Networks"',
+    venue: 'International Conference "ASIANComNet 2024 – 2024 Asian Conference on Communication and Networks"',
     place: "Thailand",
   },
   {
@@ -26,8 +25,7 @@ const RAW_TALKS = [
     month: "MAR 2025",
     date: "19.03.2025",
     title: "Underwater Sensors - Active/passive and its application in Ocean",
-    venue:
-      'Faculty Development Program (FDP) on "AI/ML and IOT applications to multi-domain engineering fields - Hands on sessions"',
+    venue: 'Faculty Development Program (FDP) on "AI/ML and IOT applications to multi-domain engineering fields - Hands on sessions"',
     place: "VIT Vellore",
   },
   {
@@ -35,26 +33,23 @@ const RAW_TALKS = [
     month: "MAR 2025",
     date: "20.03.2025",
     title: "Underwater signal and Image Processing",
-    venue:
-      "Green Revolution in Electronics Engineering and Networks Conference (GREENCON 2025)",
+    venue: "Green Revolution in Electronics Engineering and Networks Conference (GREENCON 2025)",
     place: "VIT Chennai",
   },
   {
     id: 5,
     month: "SEP 2025",
     date: "24.09.2025",
-    title: "Underwater ROV",
-    venue:
-      "4th International Conference on Engineering, Science and Technology (ICEST 2025)",
+    title: "Underwater ROV (Keynote Address)",
+    venue: "4th International Conference on Engineering, Science and Technology (ICEST 2025)",
     place: "University Batanghari Jambi, Indonesia",
   },
   {
     id: 6,
     month: "SEP 2025",
     date: "22.09.2025",
-    title: "State of Underwater Autonomy in India",
-    venue:
-      "Dive into Autonomy: A 5-Day Hands-On Workshop on Autonomous Underwater Vehicles",
+    title: "State of Underwater Autonomy in India (Inauguration & Keynote)",
+    venue: "Dive into Autonomy: A 5-Day Hands-On Workshop on Autonomous Underwater Vehicles",
     place: "SRM University, Kattankulathur",
   },
   {
@@ -80,6 +75,114 @@ const RAW_TALKS = [
     title: "Role of EEE in underwater",
     venue: "Invited Talk",
     place: "St. Joseph's College of Engineering",
+  },
+
+  // --- PAST INVITED TALKS (2013 - 2020) ---
+  {
+    id: 10,
+    month: "SEP 2013",
+    date: "06.09.2013",
+    title: "Satellite and Fiber optical Communication",
+    venue: "Invited Talk",
+    place: "Velammal Engineering College, Chennai",
+  },
+  {
+    id: 11,
+    month: "FEB 2014",
+    date: "27.02.2014",
+    title: "Modern Communication Techniques and their applications",
+    venue: "Invited Talk",
+    place: "Mahendra Engineering College, Salem",
+  },
+  {
+    id: 12,
+    month: "SEP 2014",
+    date: "30.09.2014",
+    title: "Satellite Communication",
+    venue: "Invited Talk",
+    place: "Velammal Engineering College, Chennai",
+  },
+  {
+    id: 13,
+    month: "JUN 2018",
+    date: "27.06.2018",
+    title: "Underwater Sensors",
+    venue: "Invited Talk",
+    place: "Sri Krishna College of Engineering and Technology",
+  },
+  {
+    id: 14,
+    month: "AUG 2019",
+    date: "22.08.2019",
+    title: "Spread Spectrum and Multiple Access Techniques",
+    venue: "Invited Talk",
+    place: "Velammal Engineering College, Chennai",
+  },
+  {
+    id: 15,
+    month: "DEC 2020",
+    date: "19.12.2020",
+    title: "Underwater object Detection",
+    venue: "AICTE sponsored online STTP on “Research Aspects on Deep Learning in Image and Video Processing”",
+    place: "Online",
+  },
+
+  // --- OTHER LECTURES, SEMINARS & CLASSES ---
+  {
+    id: 16,
+    month: "SEP 2011",
+    date: "09.09.2011",
+    title: "Issues and Challenges in Underwater Acoustic Communication",
+    venue: "DRDO-sponsored Seminar",
+    place: "National Engineering College, Kovilpati",
+  },
+  {
+    id: 17,
+    month: "JUL 2012",
+    date: "27.07.2012 - 28.07.2012",
+    title: "Handled classes for Govt. Higher Secondary School Teachers",
+    venue: "HSC teacher’s orientation programme",
+    place: "SSN College of Engineering",
+  },
+  {
+    id: 18,
+    month: "JUL 2017",
+    date: "24.07.2017",
+    title: "Introduction to communication system and evolution of Digital technology & Institution to Industry- Expectations and Challenges",
+    venue: "Invited Lecture",
+    place: "Mahendra Engineering College, Namakkal",
+  },
+  {
+    id: 19,
+    month: "SEP 2020",
+    date: "24.09.2020",
+    title: "Underwater sensors",
+    venue: "FDP “Sensor Technologies”",
+    place: "National Institute of Engineering (NIE), Mysuru",
+  },
+  {
+    id: 20,
+    month: "SEP 2021",
+    date: "29.09.2021",
+    title: "Challenges in underwater data collection for various applications",
+    venue: "Invited Lecture",
+    place: "K S School of Engineering and Management, Bangalore",
+  },
+  {
+    id: 21,
+    month: "DEC 2021",
+    date: "06.12.2021",
+    title: "Underwater Communication",
+    venue: "ATAL online FDP",
+    place: "Mahendra Engineering College",
+  },
+  {
+    id: 22,
+    month: "DEC 2021",
+    date: "11.12.2021",
+    title: "Underwater Antennas",
+    venue: "ATAL online FDP",
+    place: "Mailam Engineering College",
   },
 ];
 
@@ -238,14 +341,10 @@ export default function InvitedTalks() {
       return;
     }
 
-    if (!/^\d{2}\.\d{2}\.\d{4}$/.test(payload.date)) {
-      alert('Date must be in "DD.MM.YYYY" format.');
-      return;
-    }
-
+    // Relaxed validation to allow ranges like "27.07.2012 - 28.07.2012"
     const uiItem = {
       id: editingId || Date.now(),
-      month: monthFromDate(payload.date),
+      month: monthFromDate(payload.date), // It will default to "—" if it's a range, which is fine
       ...payload,
     };
 
@@ -262,7 +361,7 @@ export default function InvitedTalks() {
     <div className="page">
       <header className="hero">
         <div className="hero-left">
-          <h1>Invited Talks</h1>
+          <h1>Invited Talks, Guest Lectures & Seminars</h1>
           <p>Title / Venue / Date / Place</p>
         </div>
 
@@ -296,7 +395,7 @@ export default function InvitedTalks() {
                 <div className="group-head">
                   <div className="group-date">{month}</div>
                   <div className="group-count">
-                    {arr.length} Talk{arr.length > 1 ? "s" : ""}
+                    {arr.length} Record{arr.length > 1 ? "s" : ""}
                   </div>
                 </div>
 
@@ -338,7 +437,7 @@ export default function InvitedTalks() {
 
       {isAdmin && (
         <div className="panel bottom-form">
-          <h2>{editingId ? "Edit Invited Talk" : "Add Invited Talk"}</h2>
+          <h2>{editingId ? "Edit Record" : "Add Record"}</h2>
 
           <form onSubmit={onSubmit} className="form">
             <label>
@@ -346,7 +445,7 @@ export default function InvitedTalks() {
               <input
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                placeholder="29.01.2026"
+                placeholder="e.g. 29.01.2026"
               />
             </label>
 
@@ -364,7 +463,7 @@ export default function InvitedTalks() {
               <input
                 value={form.venue}
                 onChange={(e) => setForm({ ...form, venue: e.target.value })}
-                placeholder="Conference / event..."
+                placeholder="Conference / event / FDP..."
               />
             </label>
 
@@ -373,7 +472,7 @@ export default function InvitedTalks() {
               <input
                 value={form.place}
                 onChange={(e) => setForm({ ...form, place: e.target.value })}
-                placeholder="Thailand / VIT Vellore / SRM..."
+                placeholder="Institution name..."
               />
             </label>
 

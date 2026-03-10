@@ -1,32 +1,49 @@
 // src/pages/Pg.jsx
-import { useEffect, useMemo, useState, useContext } from "react";
-import "./AsCoordinator.css";
+import { useMemo, useState, useContext } from "react";
+import "./Pg.css";
 import { AuthContext } from "../context/AuthContext";
-
-/** ✅ DB MODE ONLY */
-const API_BASE = "http://localhost:8080/api/pgcourses";
 
 const DEFAULT_PROGRAMME = "M.Tech VLSI Embedded System";
 
-function normalize(s) {
-  return (s || "").toLowerCase().trim();
+const INITIAL_DATA = [
+  {
+    id: 1,
+    programme: "M.Tech VLSI Embedded System",
+    subjectName: "Embedded Wireless Sensor Networks",
+    subjectCode: "VE24P13",
+    periodYears: 2025,
+    semester: "2",
+    noOfStudents: 24,
+  },
+  {
+    id: 2,
+    programme: "M.Tech VLSI Embedded System",
+    subjectName: "Embedded Wireless Sensor Networks",
+    subjectCode: "VE24P13",
+    periodYears: 2025,
+    semester: "1",
+    noOfStudents: 18,
+  },
+  {
+    id: 3,
+    programme: "M.Tech VLSI Embedded System",
+    subjectName: "Network Embedded Application",
+    subjectCode: "VE24B12",
+    periodYears: 2026,
+    semester: "2",
+    noOfStudents: 18,
+  },
+];
+
+function normalize(value) {
+  return String(value || "").toLowerCase().trim();
 }
 
 function Row({ label, value }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "170px 1fr",
-        gap: "10px",
-        padding: "10px 0",
-        borderBottom: "1px solid rgba(0,0,0,0.06)",
-      }}
-    >
-      <div className="muted" style={{ fontWeight: 600 }}>
-        {label}
-      </div>
-      <div style={{ wordBreak: "break-word" }}>{value || "—"}</div>
+    <div className="row-item">
+      <div className="row-label">{label}</div>
+      <div className="row-value">{value || "—"}</div>
     </div>
   );
 }
@@ -36,11 +53,9 @@ export default function Pg() {
   const isLoggedIn = !!user;
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]); // ✅ DB is source
-  const [loading, setLoading] = useState(true);
-  const [errMsg, setErrMsg] = useState("");
-
+  const [items, setItems] = useState(INITIAL_DATA);
   const [editingId, setEditingId] = useState(null);
+
   const [form, setForm] = useState({
     programme: DEFAULT_PROGRAMME,
     subjectName: "",
@@ -50,45 +65,9 @@ export default function Pg() {
     noOfStudents: "",
   });
 
-  /** ✅ Load from DB on page load */
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setErrMsg("");
-
-        const res = await fetch(API_BASE);
-        if (!res.ok) throw new Error(`GET failed: ${res.status}`);
-
-        const data = await res.json();
-
-        const mapped = (data || []).map((row) => ({
-          id: row.id,
-          programme: row.programme ?? row.mtech ?? "", // ✅ supports old field if exists
-          subjectName: row.subjectName || "",
-          subjectCode: row.subjectCode || "",
-          periodYears: row.periodYears ?? row.period ?? "",
-          semester: row.semester ?? "",
-          noOfStudents: row.noOfStudents ?? row.students ?? "",
-        }));
-
-        mapped.sort((a, b) => (b.id || 0) - (a.id || 0)); // newest first
-        setItems(mapped);
-      } catch (e) {
-        console.error(e);
-        setErrMsg("Could not load PG data from backend. Check Spring Boot + CORS.");
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
-
-  /** ✅ Search filter */
   const filteredItems = useMemo(() => {
     const query = normalize(q);
+
     if (!query) return items;
 
     return items.filter((it) =>
@@ -115,8 +94,14 @@ export default function Pg() {
     resetForm();
   }
 
-  /** ✅ ADD or UPDATE to DB */
-  async function onSubmit(e) {
+  function handleChange(field, value) {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }
+
+  function onSubmit(e) {
     e.preventDefault();
 
     const payload = {
@@ -128,7 +113,6 @@ export default function Pg() {
       noOfStudents: Number(String(form.noOfStudents || "").trim()),
     };
 
-    // ✅ required fields
     if (
       !payload.programme ||
       !payload.subjectName ||
@@ -141,53 +125,23 @@ export default function Pg() {
       return;
     }
 
-    // ✅ validate numeric
-    if (Number.isNaN(payload.periodYears)) {
-      alert("Period (Years) must be a number.");
-      return;
-    }
-    if (Number.isNaN(payload.noOfStudents)) {
-      alert("No of Students must be a number.");
+    if (Number.isNaN(payload.periodYears) || Number.isNaN(payload.noOfStudents)) {
+      alert("Period and No of Students must be numbers.");
       return;
     }
 
-    try {
-      setErrMsg("");
+    const newItem = {
+      id: editingId || Date.now(),
+      ...payload,
+    };
 
-      let res;
-      if (editingId) {
-        res = await fetch(`${API_BASE}/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        res = await fetch(API_BASE, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
-
-      const saved = await res.json(); // should return saved row with id
-      const uiItem = { id: saved.id ?? editingId ?? Date.now(), ...payload };
-
-      if (editingId) {
-        setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
-      } else {
-        setItems((prev) => [uiItem, ...prev]);
-      }
-
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      alert("Save failed: " + (err?.message || "Unknown error"));
+    if (editingId) {
+      setItems((prev) => prev.map((it) => (it.id === editingId ? newItem : it)));
+    } else {
+      setItems((prev) => [newItem, ...prev]);
     }
+
+    resetForm();
   }
 
   function onEdit(item) {
@@ -200,57 +154,28 @@ export default function Pg() {
       semester: item.semester ?? "",
       noOfStudents: item.noOfStudents ?? "",
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
   }
 
-  /** ✅ DELETE from DB */
-  async function onDelete(id) {
-    if (!confirm("Delete this programme?")) return;
+  function onDelete(id) {
+    const ok = window.confirm("Delete this programme?");
+    if (!ok) return;
 
-    try {
-      setErrMsg("");
+    setItems((prev) => prev.filter((it) => it.id !== id));
 
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
-
-      setItems((prev) => prev.filter((it) => it.id !== id));
-    } catch (e) {
-      console.error(e);
-      alert("Delete failed: " + (e?.message || "Unknown error"));
+    if (editingId === id) {
+      resetForm();
     }
   }
 
-  /** ✅ REFRESH button (fetch again) */
-  async function refreshFromDb() {
-    try {
-      setLoading(true);
-      setErrMsg("");
-
-      const res = await fetch(API_BASE);
-      if (!res.ok) throw new Error(`GET failed: ${res.status}`);
-
-      const data = await res.json();
-      const mapped = (data || []).map((row) => ({
-        id: row.id,
-        programme: row.programme ?? row.mtech ?? "",
-        subjectName: row.subjectName || "",
-        subjectCode: row.subjectCode || "",
-        periodYears: row.periodYears ?? row.period ?? "",
-        semester: row.semester ?? "",
-        noOfStudents: row.noOfStudents ?? row.students ?? "",
-      }));
-
-      mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
-      setItems(mapped);
-    } catch (e) {
-      console.error(e);
-      setErrMsg("Refresh failed. Check backend logs / CORS.");
-    } finally {
-      setLoading(false);
-    }
+  function reloadData() {
+    setItems(INITIAL_DATA);
+    setQ("");
+    resetForm();
   }
 
   return (
@@ -263,68 +188,68 @@ export default function Pg() {
 
         <div className="hero-right">
           <input
+            type="text"
             className="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search: programme / subject / period / semester / students..."
+            placeholder="Search: programme / subject / period / semester"
           />
 
-          <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
+          <button
+            type="button"
+            className="ghost"
+            onClick={reloadData}
+            title="Reset data and search"
+          >
             Refresh
           </button>
 
           {(isAdmin || isLoggedIn) && (
-            <button className="ghost" onClick={resetAll} title="Clear search/form">
+            <button
+              type="button"
+              className="ghost"
+              onClick={resetAll}
+              title="Clear search and form"
+            >
               Clear
             </button>
           )}
         </div>
       </header>
 
-      {errMsg && (
-        <div className="empty" style={{ marginBottom: 12 }}>
-          {errMsg}
-        </div>
-      )}
-
-      {/* ✅ VERTICAL LIST OUTPUT */}
       <div className="content">
-        {loading ? (
-          <div className="empty">Loading...</div>
-        ) : filteredItems.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className="empty">No data yet.</div>
         ) : (
-          <div style={{ display: "grid", gap: 14 }}>
+          <div className="card-container">
             {filteredItems.map((it, idx) => (
               <section className="group" key={it.id}>
                 <div className="group-head">
                   <div className="group-date">Programme #{idx + 1}</div>
                 </div>
 
-                <div
-                  style={{
-                    background: "white",
-                    borderRadius: 14,
-                    padding: 16,
-                    border: "1px solid rgba(0,0,0,0.06)",
-                  }}
-                >
-                  <Row
-                    label="Programme name"
-                    value={it.programme || DEFAULT_PROGRAMME} // ✅ show default if DB null
-                  />
+                <div className="card-body">
+                  <Row label="Programme name" value={it.programme || DEFAULT_PROGRAMME} />
                   <Row label="Subject name" value={it.subjectName} />
                   <Row label="Subject code" value={it.subjectCode} />
-                  <Row label="Period (Years)" value={String(it.periodYears ?? "")} />
-                  <Row label="Semester" value={String(it.semester ?? "")} />
-                  <Row label="No of Students" value={String(it.noOfStudents ?? "")} />
+                  <Row label="Period (Years)" value={it.periodYears} />
+                  <Row label="Semester" value={it.semester} />
+                  <Row label="No of Students" value={it.noOfStudents} />
 
-                  {isAdmin && (
-                    <div className="actions" style={{ marginTop: 12 }}>
-                      <button className="edit" onClick={() => onEdit(it)}>
+                  {(isAdmin || isLoggedIn) && (
+                    <div className="actions">
+                      <button
+                        type="button"
+                        className="edit"
+                        onClick={() => onEdit(it)}
+                      >
                         Edit
                       </button>
-                      <button className="del" onClick={() => onDelete(it.id)}>
+                      <button
+                        type="button"
+                        className="del"
+                        onClick={() => onDelete(it.id)}
+                      >
                         Delete
                       </button>
                     </div>
@@ -336,7 +261,6 @@ export default function Pg() {
         )}
       </div>
 
-      {/* ✅ Add/Edit Form (Admin only) */}
       {isAdmin && (
         <div className="panel bottom-form">
           <h2>{editingId ? "Edit Programme" : "Add Programme"}</h2>
@@ -345,8 +269,9 @@ export default function Pg() {
             <label>
               Programme Name
               <input
+                type="text"
                 value={form.programme}
-                onChange={(e) => setForm({ ...form, programme: e.target.value })}
+                onChange={(e) => handleChange("programme", e.target.value)}
                 placeholder={DEFAULT_PROGRAMME}
               />
             </label>
@@ -354,17 +279,19 @@ export default function Pg() {
             <label>
               Subject Name
               <input
+                type="text"
                 value={form.subjectName}
-                onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
+                onChange={(e) => handleChange("subjectName", e.target.value)}
                 placeholder="Subject name..."
               />
             </label>
 
             <label>
-              Subject code
+              Subject Code
               <input
+                type="text"
                 value={form.subjectCode}
-                onChange={(e) => setForm({ ...form, subjectCode: e.target.value })}
+                onChange={(e) => handleChange("subjectCode", e.target.value)}
                 placeholder="Subject code..."
               />
             </label>
@@ -372,17 +299,19 @@ export default function Pg() {
             <label>
               Period (Years)
               <input
+                type="text"
                 value={form.periodYears}
-                onChange={(e) => setForm({ ...form, periodYears: e.target.value })}
-                placeholder="2"
+                onChange={(e) => handleChange("periodYears", e.target.value)}
+                placeholder="2025"
               />
             </label>
 
             <label>
               Semester
               <input
+                type="text"
                 value={form.semester}
-                onChange={(e) => setForm({ ...form, semester: e.target.value })}
+                onChange={(e) => handleChange("semester", e.target.value)}
                 placeholder="1 / 2 / 3..."
               />
             </label>
@@ -390,8 +319,9 @@ export default function Pg() {
             <label>
               No of Students
               <input
+                type="text"
                 value={form.noOfStudents}
-                onChange={(e) => setForm({ ...form, noOfStudents: e.target.value })}
+                onChange={(e) => handleChange("noOfStudents", e.target.value)}
                 placeholder="60"
               />
             </label>
@@ -400,17 +330,18 @@ export default function Pg() {
               <button className="primary" type="submit">
                 {editingId ? "Update" : "Add"}
               </button>
+
               <button className="ghost" type="button" onClick={resetForm}>
                 {editingId ? "Cancel" : "Clear"}
               </button>
             </div>
-
-            <div className="note">Tip: All fields are required.</div>
           </form>
         </div>
       )}
 
-      <footer className="footer">Now using database (MySQL) via Spring Boot API.</footer>
+      <footer className="footer">
+        Running on static local data (No Database Connected).
+      </footer>
     </div>
   );
 }

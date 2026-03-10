@@ -1477,7 +1477,7 @@ doi: ""
 {
 id: 161,
 type: "Book",
-year: "",
+year: "2013",
 title: "Communication Engineering",
 authors: "Sakthivel Murugan S",
 venue: "Second Edition",
@@ -1486,7 +1486,7 @@ doi: ""
 {
 id: 162,
 type: "Book",
-year: "",
+year: "2014",
 title: "Principles of Communication",
 authors: "Sakthivel Murugan S",
 venue: "First edition",
@@ -1495,7 +1495,7 @@ doi: ""
 {
 id: 163,
 type: "Book",
-year: "",
+year: "2010",
 title: "Analog and Digital Communication",
 authors: "Sakthivel Murugan S",
 venue: "Second Edition",
@@ -1504,7 +1504,7 @@ doi: ""
 {
 id: 164,
 type: "Book",
-year: "",
+year: "2006",
 title: "Principles of Analog and Digital Communications",
 authors: "Sakthivel Murugan S",
 venue: "First edition",
@@ -1513,7 +1513,7 @@ doi: ""
 {
 id: 165,
 type: "Book",
-year: "",
+year: "2013",
 title: "Communication Engineering",
 authors: "Sakthivel Murugan S",
 venue: "First Edition",

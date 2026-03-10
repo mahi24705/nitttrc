@@ -25,6 +25,7 @@ import Workshops from "./pages/Workshops";
 import InternationalCollaboration from "./pages/InternationalCollaboration";
 import GuestLectures from "./pages/GuestLectures";
 import Dc from "./pages/Dc";
+import BoardOfStudies from "./pages/BoardOfStudies";
 import "./App.css";
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
         <Route path="/outsideworld" element={<OutsideWorld />} />
         <Route path="/network" element={<NetworkIncharge />} />
         <Route path="/audioincharge" element={<AudioIncharge />} />
+        <Route path="/board-of-studies" element={<BoardOfStudies />} />
       </Routes>
 
       <Footer />

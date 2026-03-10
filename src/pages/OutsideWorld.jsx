@@ -16,8 +16,12 @@ function OutsideWorld() {
       route: "/international-collaboration",
     },
     { title: "Guest Lectures", subtitle: "Lectures & Interaction", route: "/guest-lectures" },
-    { title: "Board of Studies", subtitle: "Research Publications" },
-    { title: "DC", subtitle: "Research Publications", route: "/dc" },
+    {
+      title: "Board of Studies",
+      subtitle: "Research Publications",
+      route: "/board-of-studies",
+    },
+    { title: "DC", subtitle: "Doctoral Committee", route: "/dc" },
   ];
 
   const headingTitles = subHeadings.map((x) => x.title);

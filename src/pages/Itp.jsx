@@ -1,9 +1,28 @@
 // src/pages/Itp.jsx
-import { useEffect, useMemo, useState, useContext } from "react";
-import "./PdpResource.css";
+import { useMemo, useState, useContext } from "react";
+import "./PdpResource.css"; // Ensure this CSS file exists
 import { AuthContext } from "../context/AuthContext";
 
-const API = "http://localhost:8080/api/itpprogrammes";
+const INITIAL_DATA = [
+  {
+    id: 1,
+    date: "04.02.2026",
+    sessionDate: "04.02.2026",
+    code: "ITP-14",
+    title: "Industrial Training Programme for EIE and ECE",
+    duration: "02.02.2026 - 20.02.2026",
+    mode: "Contact"
+  },
+  {
+    id: 2,
+    date: "13.02.2026",
+    sessionDate: "13.02.2026",
+    code: "ITP-14",
+    title: "Industrial Training Programme for EIE and ECE",
+    duration: "02.02.2026 - 20.02.2026",
+    mode: "Contact"
+  }
+];
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
@@ -97,10 +116,7 @@ export default function Itp() {
   const isLoggedIn = !!user;
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errMsg, setErrMsg] = useState("");
-
+  const [items, setItems] = useState(INITIAL_DATA);
   const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
@@ -111,40 +127,6 @@ export default function Itp() {
     mode: "Contact",
     sessionDate: "", // actual session date
   });
-
-  async function loadFromDb() {
-    try {
-      setLoading(true);
-      setErrMsg("");
-
-      const res = await fetch(API);
-      if (!res.ok) throw new Error(`GET failed: ${res.status}`);
-      const data = await res.json();
-
-      // ✅ Map backend -> UI
-      const ui = (data || []).map((x) => ({
-        id: x.id,
-        date: x.programmeDate || "—",     // used for grouping header
-        sessionDate: x.sessionDate || "—",
-        code: x.code || "—",
-        title: x.title || "—",
-        duration: x.duration || "—",
-        mode: x.mode || "—",
-      }));
-
-      setItems(ui);
-    } catch (e) {
-      console.error(e);
-      setErrMsg("Could not load data from backend. Check Spring Boot + CORS.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadFromDb();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const filteredItems = useMemo(() => {
     const query = normalize(q);
@@ -183,7 +165,7 @@ export default function Itp() {
     });
   }
 
-  async function onSubmit(e) {
+  function onSubmit(e) {
     e.preventDefault();
 
     // ✅ Normalize dates
@@ -201,68 +183,23 @@ export default function Itp() {
       return;
     }
 
-    // ✅ This body matches your backend fields EXACTLY
-    const body = {
-      programmeDate,                 // string like "31.12.2025"
-      code: form.code.trim(),        // "ITP-01-001"
-      title: form.title.trim(),      // "Demo title"
-      duration,                      // "05.01.2026 - 09.01.2026"
-      mode: form.mode,               // "Contact"
-      sessionDate,                   // string like "31.12.2025"
+    const newItem = {
+      id: editingId ? editingId : Date.now(),
+      date: programmeDate,
+      sessionDate: sessionDate,
+      code: form.code.trim(),
+      title: form.title.trim(),
+      duration: duration,
+      mode: form.mode,
     };
 
-    try {
-      setErrMsg("");
-
-      if (editingId) {
-        const res = await fetch(`${API}/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error(await res.text());
-
-        const saved = await res.json();
-
-        const updated = {
-          id: saved.id,
-          date: saved.programmeDate || programmeDate,
-          sessionDate: saved.sessionDate || sessionDate,
-          code: saved.code,
-          title: saved.title,
-          duration: saved.duration,
-          mode: saved.mode,
-        };
-
-        setItems((prev) => prev.map((it) => (it.id === editingId ? updated : it)));
-      } else {
-        const res = await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error(await res.text());
-
-        const saved = await res.json();
-
-        const created = {
-          id: saved.id,
-          date: saved.programmeDate || programmeDate,
-          sessionDate: saved.sessionDate || sessionDate,
-          code: saved.code,
-          title: saved.title,
-          duration: saved.duration,
-          mode: saved.mode,
-        };
-
-        setItems((prev) => [created, ...prev]);
-      }
-
-      resetForm();
-    } catch (e) {
-      console.error(e);
-      setErrMsg(`Save failed: ${e.message}`);
+    if (editingId) {
+      setItems((prev) => prev.map((it) => (it.id === editingId ? newItem : it)));
+    } else {
+      setItems((prev) => [newItem, ...prev]);
     }
+
+    resetForm();
   }
 
   function onEdit(item) {
@@ -278,21 +215,14 @@ export default function Itp() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function onDelete(id) {
+  function onDelete(id) {
     if (!confirm("Delete this programme?")) return;
-    try {
-      setErrMsg("");
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(await res.text());
-      setItems((prev) => prev.filter((it) => it.id !== id));
-    } catch (e) {
-      console.error(e);
-      setErrMsg(`Delete failed: ${e.message}`);
-    }
+    setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
-  async function refreshFromDb() {
-    await loadFromDb();
+  function reloadData() {
+    setItems(INITIAL_DATA);
+    setQ("");
   }
 
   return (
@@ -310,22 +240,14 @@ export default function Itp() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search: By year / code / title / mode..."
           />
-          <button className="ghost" onClick={refreshFromDb} title="Reload from DB">
+          <button className="ghost" onClick={reloadData} title="Reset Filter & Data">
             Refresh
           </button>
         </div>
       </header>
 
-      {errMsg && (
-        <div className="empty" style={{ marginBottom: 12 }}>
-          {errMsg}
-        </div>
-      )}
-
       <div className="content">
-        {loading ? (
-          <div className="empty">Loading...</div>
-        ) : grouped.length === 0 ? (
+        {grouped.length === 0 ? (
           <div className="empty">No results found.</div>
         ) : (
           grouped.map(([date, arr]) => (
@@ -460,7 +382,7 @@ export default function Itp() {
       )}
 
       <footer className="footer">
-        Now connected to DB (Spring Boot → MySQL). Workbench is only for verifying data.
+        Running on static local data (No Database Connected).
       </footer>
     </div>
   );

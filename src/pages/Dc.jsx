@@ -10,8 +10,6 @@ const RAW_DC = [
     institution: "Anna University",
     mode: "Online",
     date: "03.12.2024",
-    details:
-      "Conducted Doctoral Committee (DC) meeting for the scholar Mr. K. Balaji (Anna University).",
   },
   {
     id: 2,
@@ -20,8 +18,6 @@ const RAW_DC = [
     institution: "SRM Kattankulathur",
     mode: "Online",
     date: "12.12.2024",
-    details:
-      "Served as Doctoral Committee (DC) member for Research scholar Ms. H. Mary Shyni.",
   },
   {
     id: 3,
@@ -30,8 +26,6 @@ const RAW_DC = [
     institution: "SRM Vadapalani",
     mode: "Online",
     date: "30.12.2024",
-    details:
-      "Served as Doctoral Committee (DC) member for Research scholar Mr. Janarthanan M.",
   },
   {
     id: 4,
@@ -40,8 +34,6 @@ const RAW_DC = [
     institution: "SRM University, Kattankulathur",
     mode: "Online",
     date: "28.01.2025",
-    details:
-      "Served as Doctoral Committee member for the first DC meeting of the scholar Dr. K. Chitra.",
   },
   {
     id: 5,
@@ -50,8 +42,6 @@ const RAW_DC = [
     institution: "SRM University, Kattankulathur",
     mode: "Online",
     date: "10.02.2025",
-    details:
-      "Served as Doctoral Committee member for Ph.D. Comprehensive Examination Meeting of Ramya S.",
   },
   {
     id: 6,
@@ -60,8 +50,6 @@ const RAW_DC = [
     institution: "Institute Level",
     mode: "Offline",
     date: "15.02.2025",
-    details:
-      "Served as Committee member to fix the norms for availing SCL/OD for participating and attending academic activities outside the institute. Report submitted to Director.",
   },
   {
     id: 7,
@@ -70,8 +58,6 @@ const RAW_DC = [
     institution: "IIT Tirupati Navavishkar I-Hub Foundation (IITTNiF)",
     mode: "Online",
     date: "17.02.2025 - 18.02.2025",
-    details:
-      "Served as Expert Member in the Technical Evaluation Committee for second round proposal evaluations under the Underwater Navigation Call for Proposals.",
   },
   {
     id: 8,
@@ -80,8 +66,6 @@ const RAW_DC = [
     institution: "SSN College of Engineering",
     mode: "Online",
     date: "18.02.2025",
-    details:
-      "Served as Doctoral Committee member for first DC meeting of Ph.D. scholar Ms. N. T. Velusudha.",
   },
   {
     id: 9,
@@ -90,8 +74,6 @@ const RAW_DC = [
     institution: "SRM Institute of Science and Technology",
     mode: "Online",
     date: "27.02.2025",
-    details:
-      "Served as Doctoral Committee member for Comprehensive exam of Ph.D. scholar Ms. Bharanidivya M.",
   },
   {
     id: 10,
@@ -100,8 +82,6 @@ const RAW_DC = [
     institution: "Part Time Scholar",
     mode: "Online",
     date: "09.07.2025",
-    details:
-      "Conducted DC meeting for part time scholar Mr. M. Vimalraj.",
   },
   {
     id: 11,
@@ -110,8 +90,6 @@ const RAW_DC = [
     institution: "SRM University",
     mode: "Offline",
     date: "23.09.2025",
-    details:
-      "Served as Doctor Committee member for synopsis meeting of Ms. T. Kamizhelakkiya.",
   },
   {
     id: 12,
@@ -120,8 +98,6 @@ const RAW_DC = [
     institution: "RAP Meeting",
     mode: "Online",
     date: "24.10.2025",
-    details:
-      "Served as Doctor Committee member in the first RAP meeting for Ms. Moganavalli C B.",
   },
   {
     id: 13,
@@ -130,8 +106,6 @@ const RAW_DC = [
     institution: "RAP Meeting",
     mode: "Online",
     date: "24.10.2025",
-    details:
-      "Served as Doctor Committee member in the first RAP meeting for Mr. Senthil Vel Murugan E.",
   },
   {
     id: 14,
@@ -140,8 +114,6 @@ const RAW_DC = [
     institution: "Anna University",
     mode: "Online",
     date: "21.11.2025",
-    details:
-      "Conducted Doctoral Committee meeting for my PhD scholar (Anna University).",
   },
   {
     id: 15,
@@ -150,8 +122,6 @@ const RAW_DC = [
     institution: "Anna University",
     mode: "Online",
     date: "12.01.2026",
-    details:
-      "Dr. S. Sakthivel Murugan served as Doctor Committee member for Ms. S. Aruna Devi.",
   },
   {
     id: 16,
@@ -160,8 +130,6 @@ const RAW_DC = [
     institution: "Anna University",
     mode: "Online",
     date: "20.01.2026",
-    details:
-      "Dr. S. Sakthivel Murugan served as Doctor Committee member for Ms. S. V. Sarojini.",
   },
 ];
 
@@ -194,25 +162,11 @@ function monthYearKey(monYear) {
 }
 
 function monthFromDate(ddmmyyyy) {
-  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
+  const firstDate = String(ddmmyyyy || "").split(" - ")[0].trim();
+  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(firstDate);
   if (!m) return "—";
   const [, , mm, yyyy] = m;
-
-  const months = [
-    "JAN",
-    "FEB",
-    "MAR",
-    "APR",
-    "MAY",
-    "JUN",
-    "JUL",
-    "AUG",
-    "SEP",
-    "OCT",
-    "NOV",
-    "DEC",
-  ];
-
+  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   return `${months[Number(mm) - 1] || "—"} ${yyyy}`;
 }
 
@@ -242,12 +196,12 @@ export default function Dc() {
   const [q, setQ] = useState("");
   const [items, setItems] = useState(RAW_DC);
   const [editingId, setEditingId] = useState(null);
+
   const [form, setForm] = useState({
     scholar: "",
     institution: "",
     mode: "Online",
     date: "",
-    details: "",
   });
 
   const filteredItems = useMemo(() => {
@@ -255,9 +209,7 @@ export default function Dc() {
     if (!query) return items;
 
     return items.filter((it) =>
-      normalize(
-        `${it.month} ${it.scholar} ${it.institution} ${it.mode} ${it.date} ${it.details}`
-      ).includes(query)
+      normalize(`${it.month} ${it.scholar} ${it.institution} ${it.mode} ${it.date}`).includes(query)
     );
   }, [items, q]);
 
@@ -282,7 +234,6 @@ export default function Dc() {
       institution: "",
       mode: "Online",
       date: "",
-      details: "",
     });
   }
 
@@ -299,7 +250,6 @@ export default function Dc() {
       institution: item.institution || "",
       mode: item.mode || "Online",
       date: item.date || "",
-      details: item.details || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -317,16 +267,10 @@ export default function Dc() {
       institution: String(form.institution || "").trim(),
       mode: String(form.mode || "").trim(),
       date: String(form.date || "").trim(),
-      details: String(form.details || "").trim(),
     };
 
     if (!payload.scholar || !payload.institution || !payload.date) {
       alert("Please fill Scholar, Institution, and Date.");
-      return;
-    }
-
-    if (!/^\d{2}\.\d{2}\.\d{4}$/.test(payload.date)) {
-      alert('Date must be in "DD.MM.YYYY" format.');
       return;
     }
 
@@ -387,7 +331,7 @@ export default function Dc() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gap: 14 }}>
+                <div style={{ display: "grid", gap: 14, padding: 14 }}>
                   {arr.map((it, idx) => (
                     <div
                       key={it.id}
@@ -403,7 +347,6 @@ export default function Dc() {
                       <Row label="Institution / Event" value={it.institution} />
                       <Row label="Mode" value={it.mode} />
                       <Row label="Date" value={it.date} />
-                      <Row label="Details" value={it.details} />
 
                       {isAdmin && (
                         <div className="actions" style={{ marginTop: 12 }}>
@@ -468,15 +411,6 @@ export default function Dc() {
               />
             </label>
 
-            <label>
-              Details
-              <input
-                value={form.details}
-                onChange={(e) => setForm({ ...form, details: e.target.value })}
-                placeholder="Full description..."
-              />
-            </label>
-
             <div className="btns">
               <button className="primary" type="submit">
                 {editingId ? "Update" : "Add"}
@@ -485,15 +419,9 @@ export default function Dc() {
                 {editingId ? "Cancel" : "Clear"}
               </button>
             </div>
-
-            <div className="note">
-              Tip: Scholar, Institution, and Date are required.
-            </div>
           </form>
         </div>
       )}
-
-      <footer className="footer">Currently using raw data inside code.</footer>
     </div>
   );
 }

@@ -1,118 +1,122 @@
-.award-container {
-  padding: 60px 20px;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #001f3f, #0077b6);
-  color: white;
-  text-align: center;
+* {
+  box-sizing: border-box;
 }
 
-.award-title {
-  font-size: 38px;
+.page {
+  /* Removed the aggressive 100vw hack so it respects your portal's layout */
+  width: 100%; 
+  min-height: 100vh;
+  background-color: #f5f7fb;
+  padding: 40px 50px; 
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* This perfectly centers the title and the container */
+}
+
+.mainTitle {
+  text-align: center;
+  font-size: 36px;
+  color: #1e3a8a;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #555;
   margin-bottom: 40px;
 }
 
-.award-flex {
+.container {
   display: flex;
-  gap: 40px;
+  flex-direction: row;
+  gap: 40px; /* Space exactly in the middle between the two cards */
+  width: 100%;
+  max-width: 1400px; /* Allows the cards to grow wide but keeps them centered */
   justify-content: center;
-  flex-wrap: wrap;
 }
 
-.award-column {
-  width: 400px;
-  background: rgba(255, 255, 255, 0.08);
+.card {
+  flex: 1; /* This forces both cards to take up exactly 50% of the container width */
+  background: white;
   padding: 30px;
-  border-radius: 20px;
-  backdrop-filter: blur(15px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
 }
 
-.award-column h3 {
+.sectionTitle {
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-  padding-bottom: 10px;
+  color: #0f172a;
+  text-align: center;
 }
 
-.award-list {
-  list-style: none;
-  padding: 0;
+.awardList {
+  flex: 1; /* Pushes the input boxes to the bottom */
 }
 
-.award-item {
+.awardItem {
+  background: #f1f5f9;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 12px 0;
-  padding: 10px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.05);
-  transition: 0.3s;
+  gap: 15px;
 }
 
-.award-text {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.award-year {
-  background: #00b4d8;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.action-buttons button {
-  margin-left: 5px;
-  background: crimson;
-  border: none;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.action-buttons button:first-child {
-  background: #00b4d8;
-}
-
-.admin-box {
-  margin-top: 20px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.admin-box input {
-  padding: 6px;
-  border-radius: 6px;
-  border: none;
+.awardText {
   flex: 1;
-  min-width: 120px;
+  min-width: 0;
+  word-break: break-all; /* Forces long random strings to wrap to the next line */
+  overflow-wrap: break-word;
 }
 
-.admin-box button {
-  padding: 6px 10px;
-  border: none;
-  background: #00b4d8;
+.awardTitle {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.awardYear {
+  color: #f97316;
+  margin-left: 5px;
+}
+
+.inputArea {
+  margin-top: 20px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.addBtn {
+  background: #2563eb;
   color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: bold;
 }
 
-/* 📱 Mobile */
-@media (max-width: 768px) {
-  .award-column {
-    width: 100%;
-  }
+.deleteBtn {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0; /* Stops the button from shrinking when text gets long */
+}
 
-  .award-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .action-buttons {
-    align-self: flex-end;
-  }
+.emptyText {
+  color: #777;
+  text-align: center;
 }

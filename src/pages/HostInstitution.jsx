@@ -1,12 +1,55 @@
 // src/pages/HostInstitution.jsx
-import { useEffect, useMemo, useState, useContext } from "react";
+import { useMemo, useState, useContext } from "react";
 import "./AsCoordinator.css";
 import { AuthContext } from "../context/AuthContext";
 
-const API_BASE = "http://localhost:8080/api/host-institutions";
+const INITIAL_DATA = [
+  {
+    id: 1,
+    rawDate: "27.03.2025",
+    date: "MAR 2025",
+    code: "—",
+    title: "Writing Successful Research Proposals for Funding",
+    duration: "27.03.2025 - 27.03.2025",
+    mode: "Contact",
+    hostInstitutionName: "Coimbatore Institute of Technology (CIT)",
+  }
+];
 
 function normalize(s) {
   return (s || "").toLowerCase().trim();
+}
+
+/** ✅ Convert DD.MM.YYYY -> "MMM YYYY" */
+function monthYearFromDDMMYYYY(ddmmyyyy) {
+  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(ddmmyyyy || "");
+  if (!m) return "—";
+  const [, , mm, yy] = m;
+
+  const months = [
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+  ];
+
+  const idx = Number(mm) - 1;
+  return `${months[idx] || "—"} ${yy}`;
+}
+
+/** ✅ Sort key for "MMM YYYY" */
+function monthYearKey(monYear) {
+  const m = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(
+    (monYear || "").trim().toUpperCase()
+  );
+  if (!m) return 0;
+
+  const months = {
+    JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+    JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+  };
+
+  const mon = months[m[1]] || "00";
+  const yr = m[2];
+  return Number(`${yr}${mon}00`);
 }
 
 function pillClass(mode) {
@@ -16,12 +59,34 @@ function pillClass(mode) {
   return "pill other";
 }
 
+/** Validate date input (DD.MM.YYYY or MMM YYYY) */
+function parseDateInputToUi(dateInput) {
+  const s = (dateInput || "").trim().toUpperCase();
+
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
+    return s;
+  }
+
+  const monYear = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})$/.exec(s);
+  if (monYear) {
+    const monMap = {
+      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+    };
+    const mm = monMap[monYear[1]];
+    const yyyy = monYear[2];
+    return `01.${mm}.${yyyy}`;
+  }
+
+  return "";
+}
+
 export default function HostInstitution() {
   const { isAdmin } = useContext(AuthContext);
 
   const [q, setQ] = useState("");
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Using Local state initialized with raw data
+  const [items, setItems] = useState(INITIAL_DATA);
 
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -32,41 +97,6 @@ export default function HostInstitution() {
     mode: "Contact",
     hostInstitutionName: "",
   });
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-
-        const res = await fetch(API_BASE);
-        if (!res.ok) {
-          throw new Error("Failed to load host institution programmes");
-        }
-
-        const data = await res.json();
-
-        const mapped = (data || []).map((row) => ({
-          id: row.id,
-          date: row.date || "",
-          code: row.code || "",
-          title: row.title || "",
-          duration: row.duration || "",
-          mode: row.mode || "Contact",
-          hostInstitutionName: row.institutionName || "",
-        }));
-
-        mapped.sort((a, b) => (b.id || 0) - (a.id || 0));
-        setItems(mapped);
-      } catch (e) {
-        console.error(e);
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
 
   const filteredItems = useMemo(() => {
     const query = normalize(q);
@@ -79,7 +109,24 @@ export default function HostInstitution() {
     );
   }, [items, q]);
 
-  const grouped = [["Host Institution", filteredItems]];
+  // Grouping logic based on Month and Year
+  const grouped = useMemo(() => {
+    const map = new Map();
+
+    for (const it of filteredItems) {
+      const key = it.date || "—";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(it);
+    }
+
+    const entries = Array.from(map.entries());
+    for (const [, arr] of entries) {
+      arr.sort((a, b) => (b.id || 0) - (a.id || 0));
+    }
+    entries.sort((a, b) => monthYearKey(b[0]) - monthYearKey(a[0]));
+
+    return entries;
+  }, [filteredItems]);
 
   function resetForm() {
     setEditingId(null);
@@ -93,75 +140,61 @@ export default function HostInstitution() {
     });
   }
 
-  async function onSubmit(e) {
+  function resetAll() {
+    setQ("");
+    resetForm();
+  }
+
+  function reloadData() {
+    setItems(INITIAL_DATA);
+    setQ("");
+  }
+
+  function onSubmit(e) {
     e.preventDefault();
 
-    const payload = {
-      date: form.date.trim(),
-      code: form.code.trim(),
-      title: form.title.trim(),
-      duration: form.duration.trim(),
-      mode: form.mode.trim(),
-      institutionName: form.hostInstitutionName.trim(),
-    };
+    const dateInput = form.date.trim();
+    const code = form.code.trim();
+    const title = form.title.trim();
+    const duration = form.duration.trim();
+    const institutionName = form.hostInstitutionName.trim();
 
-    if (!payload.date || !payload.code || !payload.title || !payload.duration || !payload.institutionName) {
-      alert("Please fill Date, Code, Title, Duration and Host Institution Name.");
+    if (!dateInput || !title || !duration || !institutionName) {
+      alert("Please fill Date, Title, Duration and Host Institution Name.");
       return;
     }
 
-    try {
-      let res;
-
-      if (editingId) {
-        res = await fetch(`${API_BASE}/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        res = await fetch(API_BASE, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || "Save failed");
-      }
-
-      const saved = await res.json();
-
-      const uiItem = {
-        id: saved.id,
-        date: saved.date || payload.date,
-        code: saved.code || payload.code,
-        title: saved.title || payload.title,
-        duration: saved.duration || payload.duration,
-        mode: saved.mode || payload.mode,
-        hostInstitutionName: saved.institutionName || payload.institutionName,
-      };
-
-      if (editingId) {
-        setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
-      } else {
-        setItems((prev) => [uiItem, ...prev]);
-      }
-
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      alert("Save failed. Check backend running + endpoint.");
+    const rawDateDD = parseDateInputToUi(dateInput);
+    if (!rawDateDD) {
+      alert('Date must be "DD.MM.YYYY" (31.12.2025) OR "JAN 2025".');
+      return;
     }
+
+    const uiItem = {
+      id: editingId ? editingId : Date.now(),
+      rawDate: rawDateDD,
+      date: monthYearFromDDMMYYYY(rawDateDD),
+      code: code || "—",
+      title,
+      duration,
+      mode: form.mode,
+      hostInstitutionName: institutionName,
+    };
+
+    if (editingId) {
+      setItems((prev) => prev.map((it) => (it.id === editingId ? uiItem : it)));
+    } else {
+      setItems((prev) => [uiItem, ...prev]);
+    }
+
+    resetForm();
   }
 
   function onEdit(item) {
     setEditingId(item.id);
     setForm({
-      date: item.date || "",
-      code: item.code || "",
+      date: item.rawDate || "",
+      code: item.code === "—" ? "" : item.code,
       title: item.title || "",
       duration: item.duration || "",
       mode: item.mode || "Contact",
@@ -170,23 +203,9 @@ export default function HostInstitution() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function onDelete(id) {
+  function onDelete(id) {
     if (!window.confirm("Delete this programme?")) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-
-      setItems((prev) => prev.filter((it) => it.id !== id));
-    } catch (e) {
-      console.error(e);
-      alert("Delete failed. Check backend.");
-    }
-  }
-
-  function resetAll() {
-    setQ("");
-    resetForm();
+    setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
   return (
@@ -204,6 +223,9 @@ export default function HostInstitution() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search host institution..."
           />
+          <button className="ghost" onClick={reloadData} title="Reload Data">
+            Refresh
+          </button>
           {isAdmin && (
             <button className="ghost" onClick={resetAll} title="Clear search/form">
               Reset
@@ -213,9 +235,7 @@ export default function HostInstitution() {
       </header>
 
       <div className="content">
-        {loading ? (
-          <div className="empty">Loading from database...</div>
-        ) : grouped.length === 0 ? (
+        {grouped.length === 0 ? (
           <div className="empty">No results found.</div>
         ) : (
           grouped.map(([date, arr]) => (
@@ -227,8 +247,8 @@ export default function HostInstitution() {
                 </div>
               </div>
 
-              <div className="table">
-                <div className="tr head">
+              <div className="table" style={{ gridTemplateColumns: 'auto auto 1fr auto auto 1fr auto' }}>
+                <div className="tr head" style={{ display: 'grid', gridTemplateColumns: '60px 80px 1fr 180px 100px 1fr 140px' }}>
                   <div>S.No</div>
                   <div>Code</div>
                   <div>Title</div>
@@ -239,7 +259,7 @@ export default function HostInstitution() {
                 </div>
 
                 {arr.map((it, idx) => (
-                  <div className="tr" key={it.id}>
+                  <div className="tr" key={it.id} style={{ display: 'grid', gridTemplateColumns: '60px 80px 1fr 180px 100px 1fr 140px' }}>
                     <div className="muted">{idx + 1}</div>
                     <div className="code">{it.code}</div>
                     <div className="programme">{it.title}</div>
@@ -247,10 +267,10 @@ export default function HostInstitution() {
                     <div>
                       <span className={pillClass(it.mode)}>{it.mode}</span>
                     </div>
-                    <div className="muted">{it.hostInstitutionName}</div>
+                    <div className="muted" style={{ wordBreak: 'break-word' }}>{it.hostInstitutionName}</div>
 
                     <div className="actions">
-                      {isAdmin && (
+                      {isAdmin ? (
                         <>
                           <button className="edit" onClick={() => onEdit(it)}>
                             Edit
@@ -259,6 +279,8 @@ export default function HostInstitution() {
                             Delete
                           </button>
                         </>
+                      ) : (
+                        <span className="muted">—</span>
                       )}
                     </div>
                   </div>
@@ -275,11 +297,11 @@ export default function HostInstitution() {
 
           <form onSubmit={onSubmit} className="form">
             <label>
-              Date
+              Date (DD.MM.YYYY or JAN 2025)
               <input
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                placeholder="31.12.2025"
+                placeholder="27.03.2025  (or)  JAN 2025"
               />
             </label>
 
@@ -288,7 +310,7 @@ export default function HostInstitution() {
               <input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value })}
-                placeholder="EC-20-281"
+                placeholder="Code (optional)"
               />
             </label>
 
@@ -306,7 +328,7 @@ export default function HostInstitution() {
               <input
                 value={form.duration}
                 onChange={(e) => setForm({ ...form, duration: e.target.value })}
-                placeholder="08.12.2025 - 12.12.2025"
+                placeholder="27.03.2025 - 27.03.2025"
               />
             </label>
 
@@ -329,7 +351,7 @@ export default function HostInstitution() {
                 onChange={(e) =>
                   setForm({ ...form, hostInstitutionName: e.target.value })
                 }
-                placeholder="Enter host institution name..."
+                placeholder="Coimbatore Institute of Technology (CIT)"
               />
             </label>
 
@@ -343,14 +365,14 @@ export default function HostInstitution() {
             </div>
 
             <div className="note">
-              Tip: Date, Code, Title, Duration and Host Institution Name are required.
+              Tip: Date, Title, Duration and Host Institution Name are required.
             </div>
           </form>
         </div>
       )}
 
       <footer className="footer">
-        Now using database (MySQL) via Spring Boot API.
+        Running on static local data (No Database Connected).
       </footer>
     </div>
   );
